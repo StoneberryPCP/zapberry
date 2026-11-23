@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# cópias antigas do WA-JS (só backup local)
+*.bak.js
+.claudeignore
+# token do GitHub nunca entra no repositório
+.env

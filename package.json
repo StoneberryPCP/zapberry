@@ -1,0 +1,73 @@
+{
+  "name": "zapberry",
+  "productName": "ZapBerry",
+  "version": "1.6.0",
+  "description": "WhatsApp multi-conta integrado ao sistema Stoneberry: avisos de serrada, estoque do cliente, respostas rápidas.",
+  "main": "main.js",
+  "author": "Stoneberry",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:relatorio": "node scripts/build-relatorio.js",
+    "build:win": "electron-builder --win",
+    "release": "electron-builder --win nsis --publish always",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.stoneberry.zapberry",
+    "productName": "ZapBerry",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "StoneberryPCP",
+        "repo": "zapberry",
+        "releaseType": "release"
+      }
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**",
+      "wa-preload.js",
+      "ui/**",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis"
+        },
+        {
+          "target": "portable"
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "include": "build/installer.nsh",
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage"
+        },
+        {
+          "target": "deb"
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Network;InstantMessaging",
+      "synopsis": "WhatsApp multi-conta para desktop"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  }
+}

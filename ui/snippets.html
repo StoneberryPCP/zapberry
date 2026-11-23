@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Respostas rápidas</title>
+<style>
+  :root { --bg:#f0f2f5; --item:#fff; --line:#d1d7db; --txt:#111b21; --muted:#667781; --ok:#16a34a; }
+  [data-theme="dark"] { --bg:#0f171c; --item:#202c33; --line:#26343d; --txt:#e9edef; --muted:#8696a0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,sans-serif; padding:16px; }
+  h1 { font-size:16px; margin-bottom:2px; }
+  p.sub { font-size:12px; color:var(--muted); margin-bottom:14px; }
+  p.sub code { background:var(--item); border:1px solid var(--line); border-radius:4px; padding:1px 5px; }
+  .row { display:grid; grid-template-columns:130px 1fr 30px; gap:8px; margin-bottom:8px; align-items:start; }
+  .row input, .row textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:8px;
+    font-size:13px; background:var(--item); color:var(--txt); outline:none; font-family:inherit; }
+  .row input:focus, .row textarea:focus { border-color:var(--ok); }
+  .row .atalho { font-family:Consolas,monospace; }
+  .row textarea { resize:vertical; min-height:38px; }
+  .row button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:15px; padding:8px 4px; }
+  .row button:hover { color:#ef4444; }
+  .acoes { display:flex; gap:8px; margin-top:14px; }
+  .acoes button { flex:1; padding:10px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+  #add { background:var(--item); color:var(--txt); border:2px dashed var(--muted); }
+  #add:hover { border-color:var(--ok); color:var(--ok); }
+  #salvar { background:var(--ok); color:#fff; }
+  #salvar:hover { filter:brightness(1.1); }
+  #msg { font-size:12px; color:var(--ok); margin-top:8px; text-align:center; min-height:16px; font-weight:600; }
+</style>
+</head>
+<body data-theme="dark">
+  <h1>⚡ Respostas rápidas</h1>
+  <p class="sub">No chat, digite <code>/atalho</code> + <strong>espaço</strong> (ou Tab) e o texto entra no lugar. Vale pra todas as contas.</p>
+  <div id="lista"></div>
+  <div class="acoes">
+    <button id="add">+ Nova resposta</button>
+    <button id="salvar">Salvar</button>
+  </div>
+  <p id="msg"></p>
+<script>
+  const $lista = document.getElementById('lista');
+  let itens = [];
+
+  function render() {
+    $lista.innerHTML = '';
+    itens.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const a = document.createElement('input');
+      a.className = 'atalho'; a.placeholder = 'atalho'; a.maxLength = 24; a.value = s.atalho;
+      a.oninput = () => { itens[i].atalho = a.value.replace(/^\//, '').toLowerCase(); };
+      const t = document.createElement('textarea');
+      t.placeholder = 'Texto completo que entra no chat...'; t.value = s.texto; t.maxLength = 2000;
+      t.oninput = () => { itens[i].texto = t.value; };
+      const x = document.createElement('button');
+      x.textContent = '✕'; x.title = 'Remover';
+      x.onclick = () => { itens.splice(i, 1); render(); };
+      row.append(a, t, x);
+      $lista.appendChild(row);
+    });
+  }
+
+  document.getElementById('add').onclick = () => { itens.push({ atalho: '', texto: '' }); render(); $lista.lastChild?.querySelector('input')?.focus(); };
+  document.getElementById('salvar').onclick = () => {
+    window.whatsapx.saveSnippets(itens);
+    const m = document.getElementById('msg');
+    m.textContent = 'Salvo! Já funciona em todas as contas.';
+    setTimeout(() => { m.textContent = ''; }, 2500);
+  };
+
+  window.whatsapx.getSnippets().then((s) => { itens = s || []; if (itens.length === 0) itens.push({ atalho: '', texto: '' }); render(); });
+  window.whatsapx.onTheme((t) => { document.body.dataset.theme = t; });
+  window.whatsapx.pronta();
+</script>
+</body>
+</html>

@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ZapBerry</title>
+<style>
+  :root { --bg:#f0f2f5; --item:#fff; --line:#d1d7db; --txt:#111b21; --muted:#667781; --ok:#16a34a; --berry:#e11d48; }
+  [data-theme="dark"] { --bg:#0f171c; --item:#202c33; --line:#26343d; --txt:#e9edef; --muted:#8696a0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,sans-serif; padding:14px; font-size:13px; }
+  h1 { font-size:16px; display:flex; align-items:center; gap:6px; }
+  p.sub { font-size:11.5px; color:var(--muted); margin:2px 0 10px; }
+  .abas { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:10px; overflow-x:auto; }
+  .abas button { white-space:nowrap; }
+  .abas button { background:none; border:none; border-bottom:2px solid transparent; color:var(--muted);
+    font-weight:700; font-size:12.5px; padding:8px 8px; cursor:pointer; }
+  .abas button.on { color:var(--ok); border-bottom-color:var(--ok); }
+  .linha { display:flex; gap:6px; margin-bottom:10px; }
+  input, select { border:1px solid var(--line); border-radius:8px; padding:8px; font-size:13px;
+    background:var(--item); color:var(--txt); outline:none; width:100%; }
+  input:focus { border-color:var(--ok); }
+  .lista { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; max-height:230px; overflow-y:auto; }
+  .item { display:flex; align-items:center; gap:8px; background:var(--item); border:1px solid var(--line);
+    border-radius:10px; padding:8px 10px; cursor:pointer; }
+  .item input { width:auto; }
+  .item .info { flex:1; min-width:0; }
+  .item .t1 { font-weight:700; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .t2 { font-size:11px; color:var(--muted); }
+  .item .tag { font-size:9.5px; font-weight:800; text-transform:uppercase; padding:2px 7px; border-radius:99px;
+    background:#fef3c7; color:#92400e; white-space:nowrap; }
+  .item .tag.ok { background:#dcfce7; color:#166534; }
+  textarea { width:100%; min-height:170px; border:1px solid var(--line); border-radius:10px; padding:10px;
+    background:var(--item); color:var(--txt); font-family:Consolas,monospace; font-size:12px; resize:vertical; outline:none; }
+  .acoes { display:flex; gap:8px; margin-top:10px; }
+  .acoes button { flex:1; padding:11px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; }
+  #inserir { background:var(--ok); color:#fff; }
+  #copiar { background:var(--item); color:var(--txt); border:1px solid var(--line); }
+  .acoes button:hover { filter:brightness(1.08); }
+  #status { text-align:center; font-size:11.5px; color:var(--muted); min-height:16px; margin-top:6px; font-weight:600; }
+  .vazio { text-align:center; color:var(--muted); padding:18px 0; font-size:12px; }
+  .cardc { background:var(--item); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .cardc .cab { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .cardc .cab .nome { font-weight:800; font-size:13px; flex:1; }
+  .cardc details { margin-top:6px; }
+  .cardc summary { font-size:11px; color:var(--muted); cursor:pointer; font-weight:700; }
+  .cardc textarea { min-height:120px; margin-top:6px; }
+  .bl { display:flex; align-items:center; gap:7px; font-size:12px; padding:3px 0; cursor:pointer; }
+  .bl .d { color:var(--muted); font-size:11px; }
+  .gru { display:flex; align-items:center; gap:8px; background:var(--item); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+  .gru .n { flex:1; font-weight:700; font-size:12.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gru .v { font-size:10.5px; color:var(--ok); }
+  .gru .sem { font-size:10.5px; color:var(--muted); }
+  .gru button { border:none; border-radius:8px; padding:6px 10px; font-size:11px; font-weight:800; cursor:pointer; background:var(--ok); color:#fff; }
+  .gru button.des { background:transparent; color:var(--muted); border:1px solid var(--line); }
+  /* aba Aviso geral */
+  .av-bloco { margin-bottom:12px; }
+  .av-rot { display:block; font-size:11.5px; font-weight:800; color:var(--muted); margin-bottom:5px; }
+  .av-ritmo { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:5px; }
+  .av-ritmo input { width:64px; padding:6px; text-align:center; }
+  .av-mini { border:1px solid var(--line); background:var(--item); color:var(--txt); border-radius:8px; padding:0 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .av-st { font-size:10.5px; font-weight:800; white-space:nowrap; }
+  .av-st.ok { color:var(--ok); } .av-st.erro { color:#dc2626; } .av-st.env { color:#d97706; }
+  #av-andamento { font-size:12px; line-height:1.5; margin-top:8px; }
+  #av-andamento .falha { color:#dc2626; font-size:11px; }
+  #painel-aviso .acoes button.sec { background:var(--item); color:var(--txt); border:1px solid var(--line); }
+  /* aba Bot */
+  #painel-bot .bt-sec { background:var(--item); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; }
+  #painel-bot .bt-sec h3 { font-size:12.5px; margin-bottom:6px; }
+  #painel-bot .bt-sec p.sub { margin:0 0 8px; }
+  #painel-bot .bt-campo { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px; }
+  #painel-bot .bt-campo > span { min-width:92px; color:var(--muted); font-weight:700; }
+  #painel-bot .bt-campo input[type=checkbox] { width:auto; }
+  #painel-bot .bt-campo input[type=time], #painel-bot .bt-campo select { width:auto; }
+  #painel-bot .bt-lista { display:flex; flex-direction:column; gap:4px; max-height:170px; overflow-y:auto; margin-bottom:6px; }
+  #painel-bot .bt-it { display:flex; align-items:center; gap:8px; font-size:12px; padding:5px 8px; border:1px solid var(--line); border-radius:8px; }
+  #painel-bot .bt-it .n { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  #painel-bot .bt-it .m { color:var(--muted); font-size:10.5px; white-space:nowrap; }
+  #painel-bot .bt-it input[type=checkbox] { width:auto; }
+  #painel-bot button.bt { border:1px solid var(--line); background:var(--item); color:var(--txt); border-radius:8px; padding:6px 10px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; }
+  #painel-bot button.bt.ok { background:var(--ok); border-color:var(--ok); color:#fff; }
+  #painel-bot pre { white-space:pre-wrap; word-break:break-word; font-family:Consolas,monospace; font-size:11.5px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px; max-height:240px; overflow-y:auto; margin-top:6px; }
+  #painel-bot .bt-st { font-size:11.5px; font-weight:700; }
+  #painel-bot .bt-st.on { color:var(--ok); } #painel-bot .bt-st.off { color:var(--muted); }
+  #painel-bot .bt-log { font-size:11px; color:var(--muted); line-height:1.5; max-height:150px; overflow-y:auto; }
+
+  /* ═════════ PAINEL ZapBerry — layout grande: menu lateral + área de trabalho ═════════ */
+  :root { --side:#ffffff; --hover:rgba(0,0,0,.045); --azul:#2563eb; --ciano:#0891b2; --berry:#2563eb;
+    --sombra:0 1px 2px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.06); }
+  [data-theme="dark"] { --side:#0b1217; --hover:rgba(255,255,255,.05); --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28); }
+  html, body { height:100%; }
+  body { padding:0; overflow:hidden; font-size:13.5px; }
+  .app { display:grid; grid-template-columns:272px minmax(0,1fr); height:100vh; }
+
+  /* menu lateral */
+  .menu { background:var(--side); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; padding:18px 14px 14px; }
+  .marca { display:flex; align-items:center; gap:11px; padding:2px 8px 16px; }
+  .marca img { width:42px; height:42px; object-fit:contain; }
+  .marca b { display:block; font-size:18px; letter-spacing:.2px; }
+  .marca small { display:block; color:var(--muted); font-size:11.5px; margin-top:1px; }
+  .abas { display:flex; flex-direction:column; gap:3px; flex:1; min-height:0; overflow-y:auto; border:0; margin:0; padding-right:2px; }
+  .abas button { display:flex; align-items:center; gap:12px; width:100%; text-align:left; white-space:normal; border:0; border-bottom:0;
+    border-radius:12px; padding:9px 10px; background:transparent; color:var(--txt); font-size:13px; font-weight:700; cursor:pointer; transition:background .12s; }
+  .abas button:hover { background:var(--hover); }
+  .abas button .ic { flex:none; width:36px; height:36px; border-radius:11px; display:grid; place-items:center; font-size:18px; background:var(--item); border:1px solid var(--line); }
+  .abas button .tx { min-width:0; line-height:1.2; }
+  .abas button .tx small { display:block; font-size:11px; font-weight:500; color:var(--muted); margin-top:2px; }
+  .abas button.on { background:linear-gradient(135deg, rgba(8,145,178,.16), rgba(37,99,235,.2)); box-shadow:inset 0 0 0 1px rgba(37,99,235,.4); color:var(--txt); border:0; }
+  .abas button.on .ic { background:linear-gradient(135deg, var(--ciano), var(--azul)); border-color:transparent; }
+
+  /* cartão da conta do sistema (rodapé do menu) */
+  .conta-sis { display:flex; align-items:center; gap:10px; margin-top:12px; padding:10px 11px; border:1px solid var(--line); border-radius:12px; background:var(--item); }
+  .conta-sis .dot { flex:none; width:10px; height:10px; border-radius:50%; background:#94a3b8; }
+  .conta-sis .dot.on { background:var(--ok); box-shadow:0 0 0 3px rgba(22,163,74,.2); }
+  .conta-sis .dot.off { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.18); }
+  .conta-sis .tx { flex:1; min-width:0; line-height:1.25; }
+  .conta-sis b { display:block; font-size:12px; }
+  .conta-sis small { display:block; font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mini { border:1px solid var(--line); background:transparent; color:var(--txt); border-radius:8px; padding:5px 9px; font-size:11px; font-weight:700; cursor:pointer; }
+  .mini:hover { background:var(--hover); }
+
+  /* área de trabalho */
+  .area { min-width:0; min-height:0; overflow-y:auto; padding:28px 36px 34px; }
+  .pagina { max-width:1080px; margin:0 auto; }
+  .topo { margin-bottom:22px; }
+  .topo h2 { font-size:26px; letter-spacing:-.4px; }
+  .topo p { margin-top:4px; color:var(--muted); font-size:13.5px; }
+
+  /* página inicial: só situação (status) */
+  .kpis { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+  .kpi { background:var(--item); border:1px solid var(--line); border-radius:18px; padding:20px 22px; box-shadow:var(--sombra); }
+  .kpi .kpi-t { display:block; font-size:12px; color:var(--muted); font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:.6px; }
+  .kpi b { display:flex; align-items:center; gap:10px; font-size:22px; letter-spacing:-.3px; }
+  .kpi small { display:block; margin-top:8px; font-size:12.5px; color:var(--muted); min-height:17px; line-height:1.4; word-break:break-word; }
+  .kpi .pt { width:11px; height:11px; border-radius:50%; background:#94a3b8; flex:none; }
+  .kpi .pt.on { background:var(--ok); box-shadow:0 0 0 4px rgba(22,163,74,.18); }
+  .kpi .pt.off { background:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.16); }
+  @media (max-width:820px) { .kpis { grid-template-columns:minmax(0,1fr); } }
+
+  /* telas de trabalho */
+  .lista { max-height:none; overflow:visible; }
+  textarea { min-height:230px; font-size:13px; }
+  .cardc, .gru, .item { box-shadow:var(--sombra); }
+  .item { border-radius:12px; padding:10px 12px; }
+  .linha input, .linha select { padding:10px 12px; }
+  .acoes button, #buscar { border-radius:12px; }
+  #status { text-align:left; }
+  input[type=file] { padding:9px 12px; cursor:pointer; }
+  input[type=file]::file-selector-button { margin-right:12px; border:0; border-radius:8px; padding:7px 14px; background:var(--azul); color:#fff; font-weight:700; cursor:pointer; }
+
+  /* Aviso geral: duas colunas (imagem, saudações e ritmo à esquerda; grupos à direita), ações embaixo */
+  #painel-aviso[style*="block"] { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); grid-template-rows:auto auto auto 1fr; column-gap:30px; align-items:start; }
+  #painel-aviso > .av-bloco:nth-child(1), #painel-aviso > .av-bloco:nth-child(2), #painel-aviso > .av-bloco:nth-child(3) { grid-column:1; }
+  #painel-aviso > .av-bloco:nth-child(4) { grid-column:2; grid-row:1 / span 4; }
+  #painel-aviso > .av-bloco:nth-child(4) .lista { max-height:min(560px, 52vh) !important; overflow-y:auto; padding-right:4px; }
+  #painel-aviso > p, #painel-aviso > .acoes, #painel-aviso > #av-andamento { grid-column:1 / -1; }
+  #av-resumo { margin:6px 0 10px; }
+  @media (max-width:1100px) {
+    #painel-aviso[style*="block"] { grid-template-columns:minmax(0,1fr); grid-template-rows:none; }
+    #painel-aviso > .av-bloco:nth-child(4) { grid-column:1; grid-row:auto; }
+  }
+
+  /* Bot: seções em duas colunas */
+  #painel-bot[style*="block"] { display:grid !important; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
+  #painel-bot .bt-sec { margin-bottom:0; border-radius:16px; padding:16px 18px; box-shadow:var(--sombra); }
+  #painel-bot .bt-sec h3 { font-size:14px; }
+  #painel-bot > .acoes, #painel-bot > #bt-msg { grid-column:1 / -1; }
+  @media (max-width:1100px) { #painel-bot[style*="block"] { grid-template-columns:minmax(0,1fr); } }
+
+  /* janela de login do sistema */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal-cartao { width:min(440px, 92vw); background:var(--item); border:1px solid var(--line); border-radius:20px; padding:24px 26px; box-shadow:0 24px 60px rgba(0,0,0,.45); }
+  .modal-cartao img { width:46px; height:46px; object-fit:contain; }
+  .modal-cartao h2 { font-size:19px; margin:8px 0 6px; }
+  .modal-cartao p { font-size:12.5px; color:var(--muted); line-height:1.45; margin-bottom:12px; }
+  .modal-cartao label { display:block; font-size:11.5px; font-weight:800; color:var(--muted); margin:10px 0 5px; }
+  .modal-cartao .erro { color:#ef4444; min-height:16px; margin:8px 0 0; font-weight:600; font-size:12.5px; }
+  .modal-cartao .acoes { margin-top:14px; }
+  .modal-cartao .acoes button.sec { background:transparent; border:1px solid var(--line); color:var(--txt); }
+</style>
+</head>
+<body data-theme="dark">
+<div class="app">
+  <aside class="menu">
+    <div class="marca">
+      <img src="../assets/logo_sb.png" alt="">
+      <div><b>ZapBerry</b><small>Stoneberry · painel de funções</small></div>
+    </div>
+
+    <nav class="abas">
+      <button data-aba="inicio" class="on"><span class="ic">🏠</span><span class="tx">Início<small>Visão geral e atalhos</small></span></button>
+      <button data-aba="enviar"><span class="ic">📨</span><span class="tx">Enviar avisos<small>Serradas prontas → clientes</small></span></button>
+      <button data-aba="serradas"><span class="ic">🪚</span><span class="tx">Serradas<small>Texto do material serrado</small></span></button>
+      <button data-aba="chapas"><span class="ic">🧱</span><span class="tx">Chapas<small>Estoque de chapas do cliente</small></span></button>
+      <button data-aba="blocos"><span class="ic">⛰</span><span class="tx">Blocos<small>Blocos no pátio</small></span></button>
+      <button data-aba="grupos"><span class="ic">🔗</span><span class="tx">Grupos<small>Cliente ↔ grupo do WhatsApp</small></span></button>
+      <button data-aba="aviso"><span class="ic">📣</span><span class="tx">Aviso geral<small>Imagem para os grupos</small></span></button>
+      <button data-aba="bot"><span class="ic">🤖</span><span class="tx">Bot<small>Perguntas no WhatsApp</small></span></button>
+    </nav>
+
+    <div class="conta-sis" id="conta-sis">
+      <span class="dot" id="dot-sis"></span>
+      <div class="tx"><b id="sis-nome">Sistema</b><small id="sis-det">verificando…</small></div>
+      <button class="mini" id="sis-botao" title="Conectar, trocar ou desconectar a conta do sistema">Conta</button>
+    </div>
+  </aside>
+
+  <main class="area">
+  <div class="pagina">
+    <header class="topo"><h2 id="titulo-pagina">Início</h2><p id="sub-pagina"></p></header>
+
+    <!-- Página INÍCIO: só a situação (status) -->
+    <div id="painel-inicio" style="display:none">
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-t">Sistema Stoneberry</span><b id="ini-sis">…</b><small id="ini-sis-d"></small></div>
+        <div class="kpi"><span class="kpi-t">Bot berry</span><b id="ini-bot">…</b><small id="ini-bot-d"></small></div>
+        <div class="kpi"><span class="kpi-t">Relatório semanal</span><b id="ini-sem">…</b><small id="ini-sem-d"></small></div>
+        <div class="kpi"><span class="kpi-t">Checagem de saúde</span><b id="ini-sau">…</b><small id="ini-sau-d"></small></div>
+      </div>
+    </div>
+
+  <div class="linha" id="linha-busca">
+    <input id="cliente" list="clientes-dl" placeholder="Cliente (vazio = todos nas serradas)..." />
+    <datalist id="clientes-dl"></datalist>
+    <button id="buscar" style="width:110px;border:none;border-radius:8px;background:var(--berry);color:#fff;font-weight:800;cursor:pointer">Buscar</button>
+  </div>
+
+  <!-- Aba AVISO GERAL: uma imagem + saudação variada pros grupos vinculados aos clientes -->
+  <div id="painel-aviso" style="display:none">
+    <div class="av-bloco">
+      <label class="av-rot">1. Imagem do aviso</label>
+      <input type="file" id="av-arq" accept="image/*">
+      <img id="av-previa" alt="" style="display:none;max-width:100%;max-height:220px;margin-top:8px;border-radius:8px;border:1px solid var(--line)">
+    </div>
+    <div class="av-bloco">
+      <label class="av-rot">2. Saudações — uma por linha (cada grupo recebe uma diferente da anterior)</label>
+      <textarea id="av-saud" style="min-height:96px" spellcheck="false"></textarea>
+    </div>
+    <div class="av-bloco">
+      <label class="av-rot">3. Ritmo</label>
+      <div class="av-ritmo"><span>Pausa entre envios:</span><input id="av-min" type="number" min="5" value="10"><span>a</span><input id="av-max" type="number" min="5" value="20"><span>segundos</span></div>
+      <div class="av-ritmo"><span>A cada</span><input id="av-lote" type="number" min="1" value="20"><span>grupos, pausa de</span><input id="av-lotemin" type="number" min="1" value="5"><span>min</span></div>
+    </div>
+    <div class="av-bloco">
+      <label class="av-rot">4. Grupos <span id="av-contagem" style="font-weight:600"></span></label>
+      <div class="linha" style="margin-bottom:6px">
+        <input id="av-filtro" placeholder="Filtrar por grupo ou cliente...">
+        <button class="av-mini" id="av-todos">Marcar todos</button>
+        <button class="av-mini" id="av-nenhum">Nenhum</button>
+      </div>
+      <div class="lista" id="av-lista" style="max-height:210px"></div>
+    </div>
+    <p id="av-resumo" class="sub"></p>
+    <div class="acoes">
+      <button id="av-iniciar" style="background:var(--berry);color:#fff">📣 Iniciar envio</button>
+      <button id="av-pausar" class="sec" style="display:none">⏸ Pausar</button>
+      <button id="av-cancelar" class="sec" style="display:none">✖ Cancelar</button>
+    </div>
+    <div id="av-andamento"></div>
+  </div>
+
+  <!-- Aba BOT: o "berry" responde perguntas de produção no WhatsApp (só quem estiver liberado) -->
+  <div id="painel-bot" style="display:none">
+    <div class="bt-sec">
+      <h3>🤖 Bot berry <span id="bt-status" class="bt-st off"></span></h3>
+      <p class="sub">Responde no WhatsApp quando alguém liberado escreve a palavra-chamada no começo da mensagem (ex.: <b id="bt-exemplo">berry relatório</b>). Só lê o sistema — não altera nada. Quem não está liberado é ignorado em silêncio.</p>
+      <label class="bt-campo"><input type="checkbox" id="bt-ativo"> <b>Bot ligado</b></label>
+      <div class="bt-campo"><span>Conta do WhatsApp</span><select id="bt-conta"></select></div>
+      <div class="bt-campo"><span>Palavra-chamada</span><input id="bt-gatilho" maxlength="20" style="width:140px"></div>
+      <label class="bt-campo"><input type="checkbox" id="bt-minhas"> Aceitar perguntas escritas pela própria conta (use se o bot roda no número de alguém da equipe; vale só nos grupos liberados)</label>
+    </div>
+
+    <div class="bt-sec">
+      <h3>👥 Grupos liberados <span id="bt-n-grupos" style="font-weight:600;color:var(--muted)"></span></h3>
+      <p class="sub">Qualquer participante desses grupos pode perguntar.</p>
+      <div class="bt-lista" id="bt-grupos"></div>
+      <button class="bt" id="bt-escolher">➕ Escolher entre os grupos da conta…</button>
+      <div id="bt-picker" style="display:none;margin-top:8px">
+        <input id="bt-pfiltro" placeholder="Filtrar grupo..." style="margin-bottom:6px">
+        <div class="bt-lista" id="bt-plista" style="max-height:200px"></div>
+      </div>
+    </div>
+
+    <div class="bt-sec">
+      <h3>📱 Números liberados <span id="bt-n-nums" style="font-weight:600;color:var(--muted)"></span></h3>
+      <p class="sub">Podem perguntar em qualquer conversa (privado ou grupo).</p>
+      <div class="bt-lista" id="bt-nums"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <button class="bt" id="bt-escolher-nums">➕ Escolher entre as conversas…</button>
+        <button class="bt" id="bt-vincular">🔗 Vincular IDs agora</button>
+      </div>
+      <p class="sub" style="margin:0 0 6px">Escolhendo da lista (ou digitando o telefone) a pessoa já fica liberada pelo ID do WhatsApp, sem precisar escrever “berry” antes.</p>
+      <div id="bt-picker-nums" style="display:none;margin-bottom:8px">
+        <input id="bt-pfiltro-nums" placeholder="Filtrar por nome ou telefone..." style="margin-bottom:6px">
+        <div class="bt-lista" id="bt-plista-nums" style="max-height:200px"></div>
+      </div>
+      <div class="linha" style="margin-bottom:6px">
+        <input id="bt-nome" placeholder="Nome (opcional)" style="flex:1">
+        <input id="bt-tel" placeholder="Telefone com DDD, ex.: 28 99999-0000" style="flex:1.4">
+        <button class="bt ok" id="bt-add">Liberar</button>
+      </div>
+      <h3 style="margin-top:8px">Quem escreveu “berry” há pouco</h3>
+      <p class="sub">Clique em Liberar para autorizar essa pessoa.</p>
+      <div class="bt-lista" id="bt-recentes"></div>
+    </div>
+
+    <div class="bt-sec">
+      <h3>🗓 Relatório semanal automático</h3>
+      <p class="sub">Manda o relatório completo da semana anterior (segunda a domingo). O ZapBerry precisa estar aberto; se estava fechado na hora, envia assim que abrir (até 36 h depois).</p>
+      <label class="bt-campo"><input type="checkbox" id="bt-ag-ativa"> <b>Enviar toda semana</b></label>
+      <div class="bt-campo"><span>Dia e hora</span>
+        <select id="bt-ag-dia"><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option><option value="0">Domingo</option></select>
+        <input type="time" id="bt-ag-hora" value="07:00">
+      </div>
+      <div class="bt-campo"><span>Enviar para</span><select id="bt-ag-destino" style="flex:1;min-width:0"></select></div>
+      <div class="bt-campo"><span>ou telefone</span><input id="bt-ag-tel" placeholder="privado: DDD + número, ex.: 28 99999-0000" style="flex:1;min-width:0"></div>
+      <p class="sub" style="margin:0 0 8px">Pode ser um grupo ou uma conversa privada. Se o telefone estiver preenchido, ele vale no lugar da lista. A lista inclui os grupos e números liberados e, depois de “Escolher entre as conversas”, as conversas da conta.</p>
+      <button class="bt" id="bt-ag-agora">Enviar a semana passada agora</button>
+    </div>
+
+    <div class="bt-sec">
+      <h3>🩺 Checagem diária de saúde</h3>
+      <p class="sub">Todo dia, na hora marcada, confere: paradas abertas há mais de 24 h, serradas e inspeções esquecidas, blocos serrados sem preço, rotinas automáticas do banco (cron) e o backup. Também responde a <b>berry saúde</b> a qualquer hora.</p>
+      <label class="bt-campo"><input type="checkbox" id="bt-sa-ativa"> <b>Checar todo dia</b></label>
+      <div class="bt-campo"><span>Hora</span><input type="time" id="bt-sa-hora" value="08:00"></div>
+      <div class="bt-campo"><span>Enviar para</span><select id="bt-sa-destino" style="flex:1;min-width:0"></select></div>
+      <div class="bt-campo"><span>ou telefone</span><input id="bt-sa-tel" placeholder="privado: DDD + número" style="flex:1;min-width:0"></div>
+      <label class="bt-campo"><input type="checkbox" id="bt-sa-sempre"> Enviar também quando estiver tudo certo (senão só avisa quando há problema)</label>
+      <div class="bt-campo"><span>Pasta do backup</span><input id="bt-sa-pasta" placeholder="pasta com ULTIMO_STATUS.txt e dumps (neste computador)" style="flex:1;min-width:0"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="bt" id="bt-sa-ver">Ver a checagem agora (só aqui)</button>
+        <button class="bt" id="bt-sa-enviar">Enviar agora</button>
+      </div>
+      <pre id="bt-sa-resp" style="display:none"></pre>
+    </div>
+
+    <div class="bt-sec">
+      <h3>🧪 Testar uma pergunta</h3>
+      <p class="sub">Roda sem passar pelo WhatsApp: mostra a resposta que o bot daria (nada é enviado).</p>
+      <div class="linha" style="margin-bottom:0">
+        <input id="bt-teste" placeholder="ex.: relatório de outubro · paradas hoje · o que tem sem serrar da AG Brasil">
+        <button class="bt ok" id="bt-perguntar">Perguntar</button>
+      </div>
+      <pre id="bt-resp" style="display:none"></pre>
+    </div>
+
+    <div class="bt-sec">
+      <h3>📜 Últimas atividades</h3>
+      <div class="bt-log" id="bt-log"></div>
+    </div>
+
+    <div class="acoes"><button id="bt-salvar" style="background:var(--berry);color:#fff">💾 Salvar configuração</button></div>
+    <p id="bt-msg" class="sub" style="text-align:center;margin-top:6px"></p>
+  </div>
+
+  <div class="lista" id="lista"></div>
+  <textarea id="preview" placeholder="A mensagem aparece aqui..." spellcheck="false"></textarea>
+  <div class="acoes" id="acoes-padrao">
+    <button id="inserir">📨 Inserir no chat ativo</button>
+    <button id="copiar">📋 Copiar</button>
+  </div>
+  <div class="acoes" id="acoes-enviar" style="display:none">
+    <button id="revisei" style="background:var(--berry);color:#fff">✅ Revisei — enviar aprovados</button>
+  </div>
+  <p id="status"></p>
+  </div>
+  </main>
+</div>
+
+<!-- Conexão com o sistema: o ZapBerry entra no banco com um usuário próprio (senha guardada criptografada pelo Windows) -->
+<div class="modal" id="login-sis">
+  <div class="modal-cartao">
+    <img src="../assets/logo_sb.png" alt="">
+    <h2>Conectar ao sistema</h2>
+    <p>O ZapBerry entra no banco com um usuário próprio, o <b>ZapBerry (sistema)</b>. A senha fica guardada <b>criptografada pelo Windows</b>, só neste computador.</p>
+    <label for="ls-email">E-mail do usuário</label>
+    <input id="ls-email" value="zapberry@equipe.stoneberry.space" autocomplete="off" spellcheck="false">
+    <label for="ls-senha">Senha</label>
+    <input id="ls-senha" type="password" autocomplete="off">
+    <p class="erro" id="ls-erro"></p>
+    <div class="acoes">
+      <button class="sec" id="ls-sair" style="display:none">Desconectar</button>
+      <button class="sec" id="ls-fechar">Fechar</button>
+      <button id="ls-ok" style="background:var(--berry);color:#fff">Conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmações: no lugar da caixa de confirmação do sistema, que no Electron/Windows deixa os campos de texto sem teclado -->
+<div class="modal" id="modal-confirma">
+  <div class="modal-cartao">
+    <h2 id="mc-titulo">Confirmar</h2>
+    <p id="mc-texto" style="white-space:pre-line"></p>
+    <div class="acoes">
+      <button class="sec" id="mc-nao">Cancelar</button>
+      <button id="mc-sim" style="background:var(--berry);color:#fff">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let BERRY = null;             // {url, key}
+  let aba = 'inicio';
+  let itens = [];               // itens da lista atual (com .sel)
+  const $ = (id) => document.getElementById(id);
+
+  const hoje = () => new Date().toLocaleDateString('pt-BR');
+  function saudacao() {
+    const h = new Date().getHours();
+    const m = h < 12 ? ['Bom dia pessoal 🤝', 'Uma excelente manhã a todos! ☀️', 'Bom dia equipe 🙌', 'Olá pessoal, bom dia ☕']
+      : h < 18 ? ['Boa tarde pessoal 🤝', 'Boa tarde equipe 🙌', 'Olá pessoal, boa tarde ☀️']
+      : ['Boa noite pessoal 🤝', 'Boa noite equipe 🌙'];
+    return m[Math.floor(Math.random() * m.length)];
+  }
+  const esp2 = (n) => String(Math.round(Number(n))).padStart(2, '0');
+  const qtd2 = (n) => String(n).padStart(2, '0');
+
+  /* Mensagem de serrada: UM bloco por seção, espessuras juntas (Quantidade 1, 2…).
+     Mesmo bloco em mais de uma linha (ex.: re-serrada) também é unificado. */
+  function msgSerrada(blocos) {
+    const porBloco = new Map();
+    for (const b of blocos) {
+      const k = `${b.interno || b.numero}|${b.material}`;
+      if (!porBloco.has(k)) porBloco.set(k, { ...b, esps: [] });
+      const u = porBloco.get(k);
+      for (const e of b.esps) {
+        const igual = u.esps.find((x) => Number(x.esp) === Number(e.esp));
+        if (igual) igual.qtd = Number(igual.qtd) + Number(e.qtd);
+        else u.esps.push({ esp: e.esp, qtd: Number(e.qtd) });
+      }
+      if (b.sobra) u.sobra = b.sobra;
+    }
+    const linhas = [saudacao(), ''];
+    for (const b of porBloco.values()) {
+      const esps = [...b.esps].sort((x, y) => Number(x.esp) - Number(y.esp));
+      linhas.push('*| SEGUE MATERIAL SERRADO*', '');
+      linhas.push(`\`- Material:\` \`\`\`${b.material}\`\`\``);
+      linhas.push(`\`- Número bloco:\` \`\`\`${b.numero}\`\`\``);
+      esps.forEach((e, i) => {
+        const rot = esps.length > 1 ? `Quantidade ${i + 1}` : 'Quantidade';
+        linhas.push(`\`- ${rot}:\` \`\`\`${qtd2(e.qtd)} ${Number(e.qtd) === 1 ? 'chapa' : 'chapas'} ${esp2(e.esp)} centímetros\`\`\``);
+      });
+      if (b.sobra) linhas.push(`\`- Obs:\` \`\`\`${b.sobra}\`\`\``);
+      linhas.push('', '');
+    }
+    return linhas.join('\n').trim();
+  }
+
+  /** Token do login do ZapBerry no sistema (guardado e renovado pelo processo principal). Sem login, abre a janela de conexão. */
+  async function tokenSis(forcar) {
+    const t = await window.whatsapx.berryToken(!!forcar);
+    if (!t) { mostrarLogin(); throw new Error('Sem login no sistema: conecte o ZapBerry na janela que abriu.'); }
+    return t;
+  }
+  /** fetch no banco com o token do login; se vier 401 tenta UMA vez com token novo. */
+  async function sbFetch(pathQS, init) {
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      const tk = await tokenSis(tentativa === 1);
+      const r = await fetch(`${BERRY.url}/rest/v1/${pathQS}`, {
+        ...init,
+        headers: { apikey: BERRY.key, Authorization: `Bearer ${tk}`, ...(init.headers || {}) },
+      });
+      if (r.status === 401 && tentativa === 0) continue;
+      return r;
+    }
+  }
+  async function sb(pathQS) {
+    const r = await sbFetch(pathQS, {});
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    return r.json();
+  }
+  async function sbw(pathQS, method, body, prefer) {
+    const r = await sbFetch(pathQS, {
+      method,
+      headers: { 'Content-Type': 'application/json', Prefer: prefer ?? 'return=minimal' },
+      body: body != null ? JSON.stringify(body) : undefined,
+    });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+  }
+
+  async function carregarClientes() {
+    try {
+      const rows = await sb('clientes?select=nome&order=nome&limit=1000');
+      $('clientes-dl').innerHTML = rows.map((c) => `<option value="${c.nome.replace(/"/g, '&quot;')}">`).join('');
+    } catch { /* segue sem sugestões */ }
+  }
+
+  /* ── Aba 1: serradas recentes (14 dias) pra avisar ── */
+  async function buscarSerradas() {
+    const cli = $('cliente').value.trim().toLowerCase();
+    const desde = new Date(Date.now() - 14 * 86400000).toISOString();
+    const blocos = await sb(
+      'serraria_os_blocos?select=id,bloco_id_interno,bloco_id_cliente,cliente_nome,material_nome,sobra_intera,sobra_intera_cm,' +
+      'serraria_os!inner(status,data_hora_final)' +
+      '&serraria_os.status=in.(inspecao,liberado,pcp,finalizada)' +
+      `&serraria_os.data_hora_final=gte.${encodeURIComponent(desde)}` +
+      '&order=id.desc&limit=120'
+    );
+    const filtrados = blocos.filter((b) => !cli || (b.cliente_nome || '').toLowerCase().includes(cli));
+    const ids = filtrados.map((b) => b.id);
+    let esps = [];
+    if (ids.length) {
+      esps = await sb(`serraria_os_espessuras?select=bloco_id,espessura,quantidade&bloco_id=in.(${ids.join(',')})`);
+    }
+    const sobraCm = (v) => v == null ? null : (Number(v) <= 3 ? Math.round(Number(v) * 100) : Math.round(Number(v)));
+    itens = filtrados.map((b) => {
+      const e = esps.filter((x) => x.bloco_id === b.id);
+      const cm = sobraCm(b.sobra_intera_cm);
+      return {
+        sel: false,
+        cliente: b.cliente_nome || '—',
+        material: b.material_nome || '—',
+        numero: b.bloco_id_cliente || b.bloco_id_interno || '—',
+        interno: b.bloco_id_interno || '',
+        sobra: b.sobra_intera ? (cm != null ? `Sobrou ${cm} cm` : 'Sobrou intera') : null,
+        esps: e.map((x) => ({ esp: x.espessura, qtd: x.quantidade })),
+        dataFim: b.serraria_os?.data_hora_final ?? '',
+      };
+    }).filter((b) => b.esps.length > 0)
+      .sort((a, b) => (b.dataFim || '').localeCompare(a.dataFim || '')); // mais recente primeiro
+    if (aba !== 'serradas') return; renderLista();
+  }
+
+  function msgSerradas() {
+    const sel = itens.filter((i) => i.sel);
+    if (sel.length === 0) return '';
+    return msgSerrada(sel);
+  }
+
+  /* ── Aba 2: chapas em estoque do cliente ── */
+  async function buscarChapas() {
+    const cli = $('cliente').value.trim();
+    if (!cli) { itens = []; renderLista('Digite o cliente pra ver o estoque.'); return; }
+    const rows = await sb(`estoque_chapas?select=cliente_nome,material_nome,id_interno,numero_bloco,espessura,disponivel&cliente_nome=ilike.*${encodeURIComponent(cli)}*&order=material_nome`);
+    itens = rows.filter((r) => Number(r.disponivel) > 0).map((r) => ({
+      sel: true,
+      cliente: r.cliente_nome, material: r.material_nome, interno: r.id_interno,
+      numero: r.numero_bloco || '—',
+      esp: Number(r.espessura), qtd: Number(r.disponivel),
+    }));
+    if (aba !== 'chapas') return; renderLista();
+  }
+  function msgChapas() {
+    const sel = itens.filter((i) => i.sel);
+    if (sel.length === 0) return '';
+    const total = sel.reduce((s, i) => s + i.qtd, 0);
+    const linhas = [saudacao(), '', '*STONEBERRY · SUAS CHAPAS DISPONÍVEIS*', `_Atualizado em ${hoje()}_`, '', '```'];
+    linhas.push('BLOCO       ID-INT   ESP   QTD  MATERIAL');
+    for (const i of sel) {
+      linhas.push(`${String(i.numero || '—').padEnd(11)} ${(i.interno || '—').padEnd(8)} ${(esp2(i.esp) + 'cm').padEnd(5)} ${String(i.qtd).padStart(4)}  ${i.material}`);
+    }
+    linhas.push('```', '', `*Total: ${total} chapas*`);
+    return linhas.join('\n');
+  }
+
+  /* ── Aba 3: blocos do cliente DISPONÍVEIS PRA SERRAR ──
+     Regra (mesma do app): sai da lista quem já saiu do pátio (SAÍDA), é legado,
+     está na serraria agora (OS ativa/inspeção/liberado/pcp) ou já foi serrado por
+     completo (OS finalizada sem sobra intera). Intera com sobra aparece marcada. */
+  async function buscarBlocos() {
+    const cli = $('cliente').value.trim();
+    if (!cli) { itens = []; renderLista('Digite o cliente pra ver os blocos.'); return; }
+    const rows = await sb(
+      'blocos_patio?select=id_interno,numero_bloco,c,a,l,finalizado,clientes!inner(nome),materiais(nome)' +
+      `&clientes.nome=ilike.*${encodeURIComponent(cli)}*&finalizado=neq.SA%C3%8DDA` +
+      '&serrado_legado=not.is.true&id_interno=not.is.null&order=created_at.desc&limit=300'
+    );
+    const ids = rows.map((r) => r.id_interno).filter(Boolean);
+    const emProcesso = new Set();   // na serraria agora
+    const ultima = new Map();       // id_interno -> ÚLTIMA serrada finalizada {key, sobra, cm}
+    if (ids.length) {
+      const s = await sb(
+        'serraria_os_blocos?select=bloco_id_interno,sobra_intera,sobra_intera_cm,serraria_os!inner(status,data_hora_final,created_at)' +
+        `&bloco_id_interno=in.(${ids.map((i) => `"${i}"`).join(',')})` +
+        '&serraria_os.status=in.(ativa,inspecao,liberado,pcp,finalizada)'
+      );
+      // sobra às vezes vem em METROS (0.2 = 20cm) — normaliza pra cm
+      const emCm = (v) => v == null ? null : (Number(v) <= 3 ? Math.round(Number(v) * 100) : Math.round(Number(v)));
+      for (const x of s) {
+        const st = x.serraria_os?.status;
+        if (['ativa', 'inspecao', 'liberado', 'pcp'].includes(st)) emProcesso.add(x.bloco_id_interno);
+        else if (st === 'finalizada') {
+          // vale a serrada MAIS RECENTE: intera re-serrada sem sobrar = esgotado
+          const key = x.serraria_os?.data_hora_final ?? x.serraria_os?.created_at ?? '';
+          const cur = ultima.get(x.bloco_id_interno);
+          if (!cur || key > cur.key) ultima.set(x.bloco_id_interno, { key, sobra: !!x.sobra_intera, cm: emCm(x.sobra_intera_cm) });
+        }
+      }
+    }
+    itens = rows
+      .filter((r) => !emProcesso.has(r.id_interno))
+      .filter((r) => !ultima.has(r.id_interno) || ultima.get(r.id_interno).sobra)
+      .map((r) => ({
+        sel: true,
+        interno: r.id_interno || '—', numero: r.numero_bloco || '—',
+        material: r.materiais?.nome || '—', cliente: r.clientes?.nome || '—',
+        m3: (Number(r.c) * Number(r.a) * Number(r.l)) || 0,
+        medidas: `${Number(r.c).toFixed(2)}×${Number(r.a).toFixed(2)}×${Number(r.l).toFixed(2)}`,
+        interaCm: ultima.get(r.id_interno)?.sobra ? (ultima.get(r.id_interno).cm ?? 0) : null,
+      }));
+    if (aba !== 'blocos') return; renderLista();
+  }
+  function msgBlocos() {
+    const sel = itens.filter((i) => i.sel);
+    if (sel.length === 0) return '';
+    const linhas = [saudacao(), '', '*STONEBERRY · SEUS BLOCOS NO PÁTIO*', `_Atualizado em ${hoje()}_`, '', '```'];
+    linhas.push('BLOCO       ID-INT   MEDIDAS          M³     MATERIAL');
+    let totM3 = 0;
+    for (const i of sel) {
+      totM3 += i.m3;
+      const obs = i.interaCm != null ? ` (intera${i.interaCm ? ` ${i.interaCm}cm` : ''})` : '';
+      linhas.push(`${String(i.numero).padEnd(11)} ${String(i.interno).padEnd(8)} ${i.medidas.padEnd(15)} ${i.m3.toFixed(2).replace('.', ',').padStart(6)}  ${i.material}${obs}`);
+    }
+    linhas.push('```', '', `*${sel.length} bloco(s) · ${totM3.toFixed(2).replace('.', ',')} m³*`);
+    return linhas.join('\n');
+  }
+
+  /* ── Aba ENVIAR: fila revisada → app envia nos grupos vinculados ── */
+  let fila = [];   // [{clienteNome, clienteId, grupo, blocos:[{sel,ref-por-esp,...}], msg}]
+  const refDe = (blocoId, esp) => `${blocoId}:${Number(esp)}`;
+
+  async function buscarEnviar() {
+    const desde = new Date(Date.now() - 21 * 86400000).toISOString();
+    const [blocos, avisados, grupos] = await Promise.all([
+      sb('serraria_os_blocos?select=id,bloco_id_interno,bloco_id_cliente,cliente_nome,material_nome,sobra_intera,sobra_intera_cm,' +
+        'serraria_os!inner(status,data_hora_final)&serraria_os.status=in.(inspecao,liberado,pcp,finalizada)' +
+        `&serraria_os.data_hora_final=gte.${encodeURIComponent(desde)}&order=id.desc&limit=150`),
+      sb('zapberry_avisos?select=ref&tipo=eq.serrada&limit=10000'),
+      sb('zapberry_grupos?select=cliente_id,jid,nome_grupo'),
+    ]);
+    const jaAvisado = new Set(avisados.map((a) => a.ref));
+    const ids = blocos.map((b) => b.id);
+    const esps = ids.length ? await sb(`serraria_os_espessuras?select=bloco_id,espessura,quantidade&bloco_id=in.(${ids.join(',')})`) : [];
+    const internos = [...new Set(blocos.map((b) => b.bloco_id_interno).filter(Boolean))];
+    const bps = internos.length
+      ? await sb(`blocos_patio?select=id_interno,cliente_id&id_interno=in.(${internos.map((i) => `"${i}"`).join(',')})`)
+      : [];
+    const cliDoInterno = new Map(bps.map((r) => [r.id_interno, r.cliente_id]));
+    const grupoDoCliente = new Map(grupos.map((g) => [g.cliente_id, g]));
+    const sobraCm = (v) => v == null ? null : (Number(v) <= 3 ? Math.round(Number(v) * 100) : Math.round(Number(v)));
+
+    const porCliente = new Map();
+    for (const b of blocos) {
+      const novas = esps.filter((x) => x.bloco_id === b.id && !jaAvisado.has(refDe(b.id, x.espessura)));
+      if (!novas.length) continue;
+      const cliId = cliDoInterno.get(b.bloco_id_interno) ?? null;
+      const chave = b.cliente_nome || '—';
+      if (!porCliente.has(chave)) porCliente.set(chave, { clienteNome: chave, clienteId: cliId, grupo: cliId ? (grupoDoCliente.get(cliId) ?? null) : null, blocos: [] });
+      const cm = sobraCm(b.sobra_intera_cm);
+      porCliente.get(chave).blocos.push({
+        sel: true, blocoId: b.id,
+        material: b.material_nome || '—',
+        numero: b.bloco_id_cliente || b.bloco_id_interno || '—',
+        interno: b.bloco_id_interno || '',
+        sobra: b.sobra_intera ? (cm != null ? `Sobrou ${cm} cm` : 'Sobrou intera') : null,
+        esps: novas.map((x) => ({ esp: x.espessura, qtd: x.quantidade, ref: refDe(b.id, x.espessura) })),
+      });
+    }
+    fila = [...porCliente.values()];
+    fila.forEach((c) => { c.msg = msgCliente(c); });
+    if (aba !== 'enviar') return; renderEnviar();
+  }
+
+  function msgCliente(c) {
+    return msgSerrada(c.blocos.filter((x) => x.sel));
+  }
+
+  function renderEnviar() {
+    const $l = $('lista');
+    $l.innerHTML = '';
+    if (fila.length === 0) {
+      $l.innerHTML = '<p class="vazio">Nenhuma serrada nova pra avisar. 🎉</p>';
+      return;
+    }
+    fila.forEach((c, ci) => {
+      const card = document.createElement('div');
+      card.className = 'cardc';
+      const cab = document.createElement('div');
+      cab.className = 'cab';
+      cab.innerHTML = `<span class="nome">${c.clienteNome}</span>` + (c.grupo
+        ? `<span class="tag ok">→ ${c.grupo.nome_grupo}</span>`
+        : '<span class="tag">sem grupo — aba 🔗 Grupos</span>');
+      card.appendChild(cab);
+      c.blocos.forEach((b, bi) => {
+        const l = document.createElement('label');
+        l.className = 'bl';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.checked = b.sel;
+        chk.onchange = () => { fila[ci].blocos[bi].sel = chk.checked; fila[ci].msg = msgCliente(fila[ci]); card.querySelector('textarea').value = fila[ci].msg; };
+        const sp = document.createElement('span');
+        sp.innerHTML = `<strong>Bloco ${b.numero}</strong> · ${b.material} <span class="d">(${b.interno}) — ${b.esps.map((e) => `${e.qtd}×${esp2(e.esp)}cm`).join(' + ')}${b.sobra ? ' · ' + b.sobra : ''}</span>`;
+        l.append(chk, sp);
+        card.appendChild(l);
+      });
+      const det = document.createElement('details');
+      det.innerHTML = '<summary>ver / editar mensagem</summary>';
+      const ta = document.createElement('textarea');
+      ta.value = c.msg;
+      ta.oninput = () => { fila[ci].msg = ta.value; };
+      det.appendChild(ta);
+      card.appendChild(det);
+      $l.appendChild(card);
+    });
+  }
+
+  $('revisei').onclick = async () => {
+    const prontos = fila.filter((c) => c.grupo && c.blocos.some((b) => b.sel));
+    if (!prontos.length) { $('status').textContent = 'Nada aprovado com grupo vinculado.'; return; }
+    const semGrupo = fila.filter((c) => !c.grupo && c.blocos.some((b) => b.sel)).length;
+    $('revisei').disabled = true;
+    $('status').textContent = `Enviando 0/${prontos.length}...`;
+    const itens = prontos.map((c) => ({
+      clienteId: c.clienteId,
+      grupoNome: c.grupo.nome_grupo,
+      grupoJid: c.grupo.jid,
+      texto: c.msg,
+      refs: c.blocos.filter((b) => b.sel).flatMap((b) => b.esps.map((e) => ({ ref: e.ref, qtd: e.qtd }))),
+    }));
+    try {
+      const res = await window.whatsapx.enviarAvisos(itens);
+      const ok = res.filter((r) => r.ok).length;
+      const falhas = res.filter((r) => !r.ok);
+      $('status').textContent = `✅ ${ok} enviado(s)` +
+        (falhas.length ? ` · ⚠ ${falhas.length} falhou: ${falhas.map((f) => `${f.cliente} (${f.motivo})`).join('; ')}` : '') +
+        (semGrupo ? ` · ${semGrupo} cliente(s) sem grupo vinculado` : '');
+    } catch (e) {
+      $('status').textContent = 'Erro no envio: ' + e.message;
+    }
+    $('revisei').disabled = false;
+    buscarEnviar(); // enviados somem da fila
+  };
+  window.whatsapx.onEnvioProgresso((res) => {
+    $('status').textContent = `Enviando ${res.length}... (${res.filter((r) => r.ok).length} ok)`;
+  });
+
+  /* ── Aba GRUPOS: vincular cliente ↔ grupo do WhatsApp ── */
+  let gruposCache = [];
+  async function buscarGrupos() {
+    const filtro = $('cliente').value.trim().toLowerCase();
+    const [clientes, grupos] = await Promise.all([
+      sb('clientes?select=id,nome&order=nome&limit=1000'),
+      sb('zapberry_grupos?select=cliente_id,jid,nome_grupo'),
+    ]);
+    const g = new Map(grupos.map((x) => [x.cliente_id, x]));
+    gruposCache = clientes
+      .filter((c) => !filtro || c.nome.toLowerCase().includes(filtro))
+      .map((c) => ({ ...c, vinc: g.get(c.id) ?? null }));
+    if (aba !== 'grupos') return; renderGrupos();
+  }
+  function renderGrupos() {
+    const $l = $('lista');
+    $l.innerHTML = '<p class="vazio" style="padding:6px 0 10px">Abre o <strong>grupo do cliente</strong> na conta ativa do WhatsApp e clica <strong>Vincular</strong> — o ZapBerry grava o ID real do grupo (trava de segurança do envio).</p>';
+    gruposCache.forEach((c) => {
+      const row = document.createElement('div');
+      row.className = 'gru';
+      row.innerHTML = `<span class="n">${c.nome}</span>` +
+        (c.vinc ? `<span class="v">✓ ${c.vinc.nome_grupo}</span>` : '<span class="sem">sem grupo</span>');
+      const b = document.createElement('button');
+      b.textContent = c.vinc ? 'Revincular' : 'Vincular';
+      b.onclick = async () => {
+        b.disabled = true;
+        $('status').textContent = 'Lendo o chat aberto na conta ativa...';
+        const chat = await window.whatsapx.lerChatAberto();
+        if (!chat || (!chat.jid && !chat.nome)) {
+          const dbg = chat?.debug ? ` [conta ativa: ${chat.contaAtiva ?? '?'} · debug: ${JSON.stringify(chat.debug)}]` : '';
+          $('status').textContent = '⚠ Não achei chat aberto na conta ativa — abre a conversa do grupo e tenta de novo.' + dbg;
+          b.disabled = false; return;
+        }
+        if (!(await confirmar(`Vincular "${c.nome}" ao chat:\n\n${chat.nome ?? '(sem nome)'}\n${chat.jid ?? '(sem ID — vínculo por nome)'}\n\nConta: ${chat.contaAtiva ?? '?'}\n\nConfirma?`, { titulo: 'Vincular grupo', sim: 'Vincular' }))) { b.disabled = false; return; }
+        try {
+          await sbw('zapberry_grupos?on_conflict=cliente_id', 'POST',
+            [{ cliente_id: c.id, jid: chat.jid ?? '', nome_grupo: chat.nome ?? c.nome, updated_at: new Date().toISOString() }],
+            'resolution=merge-duplicates,return=minimal');
+          $('status').textContent = chat.jid
+            ? `✅ ${c.nome} → ${chat.nome ?? chat.jid} (com ID — trava máxima)`
+            : `✅ ${c.nome} → ${chat.nome} (por NOME — sem ID; confere o nome do grupo exato)`;
+          buscarGrupos();
+        } catch (e) { $('status').textContent = 'Erro: ' + e.message; b.disabled = false; }
+      };
+      row.appendChild(b);
+      if (c.vinc) {
+        const d = document.createElement('button');
+        d.className = 'des'; d.textContent = '✕'; d.title = 'Desvincular';
+        d.onclick = async () => { await sbw(`zapberry_grupos?cliente_id=eq.${c.id}`, 'DELETE'); buscarGrupos(); };
+        row.appendChild(d);
+      }
+      $l.appendChild(row);
+    });
+  }
+
+  /* ── Aba AVISO GERAL: imagem + saudação variada pros grupos vinculados aos clientes ──
+     O envio roda no app (processo principal); aqui só se monta o aviso e se acompanha o progresso. */
+  let avGrupos = [];        // [{clienteId, clienteNome, grupoNome, jid, sel}]
+  let avImagem = null;      // data URL JPEG já reduzida
+  let avEstado = null;      // último estado vindo do app { total, resultados, fase, pausado, proximoEm, ... }
+  let avTimer = null;
+
+  function saudacoesPadrao() {
+    const h = new Date().getHours();
+    return (h < 12
+      ? ['Bom dia!', 'Bom dia pessoal 🤝', 'Bom dia, equipe! ☀️', 'Olá, bom dia! ☕', 'Bom dia a todos 🙌', 'Uma excelente manhã a todos! ☀️', 'Bom dia, tudo bem? 👋']
+      : h < 18
+        ? ['Boa tarde!', 'Boa tarde pessoal 🤝', 'Boa tarde, equipe! ☀️', 'Olá, boa tarde! ☕', 'Boa tarde a todos 🙌', 'Uma excelente tarde a todos! ☀️', 'Boa tarde, tudo bem? 👋']
+        : ['Boa noite!', 'Boa noite pessoal 🤝', 'Boa noite, equipe! 🌙', 'Olá, boa noite! ☕', 'Boa noite a todos 🙌', 'Boa noite, tudo bem? 👋']
+    ).join('\n');
+  }
+  const avHash = (s) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+  function avRitmo() {
+    return { minSeg: Number($('av-min').value), maxSeg: Number($('av-max').value), loteTam: Number($('av-lote').value), loteSeg: Number($('av-lotemin').value) * 60, falhasMax: 3 };
+  }
+  function avRitmoErro(r) {
+    if (!(r.minSeg >= 5)) return 'A pausa mínima entre envios tem que ser de pelo menos 5 segundos.';
+    if (!(r.maxSeg >= r.minSeg)) return 'A pausa máxima não pode ser menor que a mínima.';
+    if (!(r.loteTam >= 1)) return 'O tamanho do lote tem que ser de pelo menos 1 grupo.';
+    if (!(r.loteSeg >= 60)) return 'A pausa entre lotes tem que ser de pelo menos 1 minuto.';
+    return null;
+  }
+  // mesma conta de lib/filaAviso.js (estimarSegundos)
+  function avEstimar(n, r) {
+    if (n <= 0) return 0;
+    const media = (r.minSeg + r.maxSeg) / 2;
+    const lotes = Math.floor((n - 1) / r.loteTam);
+    return Math.round((n - 1 - lotes) * media + lotes * r.loteSeg + n * 4);
+  }
+  const avFmt = (seg) => seg >= 3600 ? `${Math.floor(seg / 3600)}h${String(Math.round((seg % 3600) / 60)).padStart(2, '0')}` : `${Math.max(1, Math.round(seg / 60))} min`;
+  const avRodando = () => !!avEstado && avEstado.fase === 'enviando';
+
+  async function buscarAviso() {
+    if (!$('av-saud').value.trim()) $('av-saud').value = saudacoesPadrao();
+    const [grupos, clientes] = await Promise.all([
+      sb('zapberry_grupos?select=cliente_id,jid,nome_grupo&order=nome_grupo&limit=1000'),
+      sb('clientes?select=id,nome&limit=1000'),
+    ]);
+    const nome = new Map(clientes.map((c) => [c.id, c.nome]));
+    const antes = new Map(avGrupos.map((g) => [g.clienteId, g.sel]));
+    avGrupos = grupos.map((g) => ({ clienteId: g.cliente_id, clienteNome: nome.get(g.cliente_id) ?? '—', grupoNome: g.nome_grupo, jid: g.jid, sel: antes.get(g.cliente_id) ?? true }));
+    avEstado = await window.whatsapx.getAvisoGeralEstado();
+    if (aba !== 'aviso') return;
+    renderAviso();
+  }
+
+  function renderAviso() {
+    const filtro = $('av-filtro').value.trim().toLowerCase();
+    const status = new Map((avEstado?.resultados ?? []).map((r) => [r.clienteId, r.ok ? 'ok' : 'erro']));
+    const travado = avRodando();
+    const $l = $('av-lista');
+    $l.innerHTML = '';
+    avGrupos
+      .filter((g) => !filtro || g.grupoNome.toLowerCase().includes(filtro) || g.clienteNome.toLowerCase().includes(filtro))
+      .forEach((g) => {
+        const el = document.createElement('label');
+        el.className = 'item';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.checked = g.sel; chk.disabled = travado;
+        chk.onchange = () => { g.sel = chk.checked; avResumo(); };
+        const info = document.createElement('div');
+        info.className = 'info';
+        info.innerHTML = `<div class="t1"></div><div class="t2"></div>`;
+        info.firstChild.textContent = g.grupoNome;
+        info.lastChild.textContent = g.clienteNome;
+        el.append(chk, info);
+        const st = status.get(g.clienteId);
+        const atual = travado && avEstado.atual === g.grupoNome;
+        if (st || atual) {
+          const s = document.createElement('span');
+          s.className = 'av-st ' + (atual && !st ? 'env' : st);
+          s.textContent = atual && !st ? '⏳ enviando' : st === 'ok' ? '✅ enviado' : '⚠ falhou';
+          el.appendChild(s);
+        }
+        $l.appendChild(el);
+      });
+    avResumo();
+    avBotoes();
+  }
+
+  function avResumo() {
+    const sel = avGrupos.filter((g) => g.sel).length;
+    $('av-contagem').textContent = `· ${sel} de ${avGrupos.length} selecionados`;
+    const r = avRitmo();
+    $('av-resumo').textContent = sel && !avRitmoErro(r) ? `Duração estimada: ~${avFmt(avEstimar(sel, r))} para ${sel} grupo(s).` : '';
+  }
+
+  function avBotoes() {
+    const rod = avRodando();
+    $('av-iniciar').style.display = rod ? 'none' : '';
+    $('av-pausar').style.display = rod ? '' : 'none';
+    $('av-cancelar').style.display = rod ? '' : 'none';
+    $('av-pausar').textContent = avEstado?.pausado ? '▶ Continuar' : '⏸ Pausar';
+    ['av-arq', 'av-saud', 'av-min', 'av-max', 'av-lote', 'av-lotemin'].forEach((id) => { $(id).disabled = rod; });
+  }
+
+  function avAndamento() {
+    const e = avEstado;
+    const $a = $('av-andamento');
+    if (!e) { $a.innerHTML = ''; return; }
+    const ok = e.resultados.filter((r) => r.ok).length;
+    const falhas = e.resultados.filter((r) => !r.ok);
+    let linha = `${e.resultados.length}/${e.total} · ✅ ${ok} enviado(s)${falhas.length ? ` · ⚠ ${falhas.length} falha(s)` : ''}`;
+    if (e.jaEnviados) linha += ` · ${e.jaEnviados} já tinha(m) recebido`;
+    if (e.fase === 'enviando') {
+      if (e.pausado) linha += '<br>⏸ Pausado.';
+      else if (e.proximoEm) linha += `<br>⏳ Próximo envio em ${Math.max(0, Math.round((e.proximoEm - Date.now()) / 1000))} s`;
+      else if (e.atual) linha += `<br>📤 Enviando para ${e.atual.replace(/</g, '&lt;')}...`;
+    } else {
+      linha += '<br><strong>' + ({
+        concluido: '✅ Concluído.',
+        cancelado: '✖ Cancelado — os já enviados não repetem se você rodar de novo.',
+        falhas: '⛔ Parou sozinho após 3 falhas seguidas. Confere se o WhatsApp da conta ativa está conectado e rode de novo: quem já recebeu é pulado.',
+      }[e.motivoFim] ?? (e.motivoFim || 'Finalizado.')) + '</strong>';
+    }
+    falhas.forEach((f) => { linha += `<div class="falha">⚠ ${String(f.grupo).replace(/</g, '&lt;')}: ${String(f.motivo ?? '?').replace(/</g, '&lt;')}</div>`; });
+    $a.innerHTML = linha;
+  }
+
+  function avAplicar(estado) {
+    avEstado = estado;
+    avAndamento();
+    if (aba === 'aviso') renderAviso();
+    clearInterval(avTimer);
+    if (avRodando()) avTimer = setInterval(avAndamento, 1000); // contagem regressiva do próximo envio
+  }
+
+  $('av-arq').onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const url = URL.createObjectURL(f);
+      const img = new Image();
+      await new Promise((ok, err) => { img.onload = ok; img.onerror = () => err(new Error('arquivo não é uma imagem válida')); img.src = url; });
+      // reduz pra 1080 px de largura e salva como JPEG (o WhatsApp trata como foto, não como figurinha)
+      const esc = Math.min(1, 1080 / img.naturalWidth);
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.naturalWidth * esc); cv.height = Math.round(img.naturalHeight * esc);
+      const cx = cv.getContext('2d');
+      cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+      cx.drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      avImagem = cv.toDataURL('image/jpeg', 0.9);
+      $('av-previa').src = avImagem; $('av-previa').style.display = 'block';
+      $('status').textContent = `Imagem pronta (${cv.width}×${cv.height}, ${Math.round(avImagem.length * 0.75 / 1024)} KB).`;
+    } catch (err) {
+      avImagem = null; $('av-previa').style.display = 'none';
+      $('status').textContent = '⚠ ' + err.message;
+    }
+  };
+  $('av-filtro').oninput = renderAviso;
+  ['av-min', 'av-max', 'av-lote', 'av-lotemin'].forEach((id) => { $(id).oninput = avResumo; });
+  $('av-todos').onclick = () => { const f = $('av-filtro').value.trim().toLowerCase(); avGrupos.forEach((g) => { if (!f || g.grupoNome.toLowerCase().includes(f) || g.clienteNome.toLowerCase().includes(f)) g.sel = true; }); renderAviso(); };
+  $('av-nenhum').onclick = () => { const f = $('av-filtro').value.trim().toLowerCase(); avGrupos.forEach((g) => { if (!f || g.grupoNome.toLowerCase().includes(f) || g.clienteNome.toLowerCase().includes(f)) g.sel = false; }); renderAviso(); };
+
+  $('av-iniciar').onclick = async () => {
+    const sel = avGrupos.filter((g) => g.sel);
+    const saudacoes = $('av-saud').value.split('\n').map((s) => s.trim()).filter(Boolean);
+    const ritmo = avRitmo();
+    if (!avImagem) { $('status').textContent = 'Escolhe a imagem primeiro.'; return; }
+    if (!saudacoes.length) { $('status').textContent = 'Coloca pelo menos uma saudação.'; return; }
+    if (!sel.length) { $('status').textContent = 'Marca pelo menos um grupo.'; return; }
+    const erro = avRitmoErro(ritmo);
+    if (erro) { $('status').textContent = '⚠ ' + erro; return; }
+    if (!(await confirmar(`Enviar a imagem para ${sel.length} grupo(s)?\n\nDuração estimada: ~${avFmt(avEstimar(sel.length, ritmo))}\nPausa de ${ritmo.minSeg} a ${ritmo.maxSeg} s entre envios e ${Math.round(ritmo.loteSeg / 60)} min a cada ${ritmo.loteTam} grupos.\n\nO WhatsApp da conta ativa precisa continuar aberto e o PC ligado até terminar.\n\nConfirma?`, { titulo: 'Aviso geral', sim: 'Iniciar envio' }))) return;
+    // mesmo dia + mesma imagem = mesmo aviso: se o envio for interrompido e rodado de novo, quem já recebeu é pulado
+    const d = new Date();
+    const dia = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    $('av-iniciar').disabled = true;
+    try {
+      const r = await window.whatsapx.iniciarAvisoGeral({
+        avisoId: `${dia}-${avHash(avImagem)}`, imagem: avImagem, saudacoes, ritmo,
+        grupos: sel.map((g) => ({ clienteId: g.clienteId, grupoNome: g.grupoNome, grupoJid: g.jid })),
+      });
+      if (!r.ok) { $('status').textContent = '⚠ ' + r.motivo; return; }
+      $('status').textContent = `Enviando para ${r.total} grupo(s)${r.jaEnviados ? ` (${r.jaEnviados} já tinham recebido)` : ''}...`;
+      avAplicar(await window.whatsapx.getAvisoGeralEstado());
+    } catch (e) {
+      $('status').textContent = 'Erro: ' + e.message;
+    } finally { $('av-iniciar').disabled = false; }
+  };
+  $('av-pausar').onclick = () => window.whatsapx.controleAvisoGeral(avEstado?.pausado ? 'continuar' : 'pausar');
+  $('av-cancelar').onclick = async () => { if (await confirmar('Cancelar o envio? Os grupos que já receberam não repetem se você rodar de novo.', { titulo: 'Cancelar envio', sim: 'Cancelar o envio' })) window.whatsapx.controleAvisoGeral('cancelar'); };
+  window.whatsapx.onAvisoProgresso((ev) => { if (ev.estado) avAplicar(ev.estado); });
+
+  /* ── Render ── */
+  function renderLista(vazioMsg) {
+    const $l = $('lista');
+    $l.innerHTML = '';
+    if (itens.length === 0) {
+      $l.innerHTML = `<p class="vazio">${vazioMsg || 'Nada encontrado. Ajusta o cliente e Buscar.'}</p>`;
+      atualizarPreview();
+      return;
+    }
+    itens.forEach((i, idx) => {
+      const el = document.createElement('label');
+      el.className = 'item';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox'; chk.checked = i.sel;
+      chk.onchange = () => { itens[idx].sel = chk.checked; atualizarPreview(); };
+      const info = document.createElement('div');
+      info.className = 'info';
+      if (aba === 'serradas') {
+        info.innerHTML = `<div class="t1">${i.cliente} · ${i.material}</div>
+          <div class="t2">Bloco ${i.numero} (${i.interno}) — ${i.esps.map((e) => `${e.qtd}×${esp2(e.esp)}cm`).join(' + ')}${i.sobra ? ' · ' + i.sobra : ''}</div>`;
+      } else if (aba === 'chapas') {
+        info.innerHTML = `<div class="t1">Bloco ${i.numero} · ${i.material}</div><div class="t2">${i.interno} — ${i.qtd} chapas de ${esp2(i.esp)}cm</div>`;
+      } else {
+        info.innerHTML = `<div class="t1">Bloco ${i.numero} · ${i.material}</div><div class="t2">${i.interno} — ${i.medidas} (${i.m3.toFixed(2)} m³)</div>`;
+      }
+      el.append(chk, info);
+      if (aba === 'serradas' && i.sobra) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'sobra intera'; el.appendChild(t); }
+      if (aba === 'blocos') {
+        const t = document.createElement('span');
+        const temIntera = i.interaCm != null;
+        t.className = 'tag' + (temIntera ? '' : ' ok');
+        t.textContent = temIntera ? `intera${i.interaCm ? ` ${i.interaCm}cm` : ''}` : 'no pátio';
+        el.appendChild(t);
+      }
+      $l.appendChild(el);
+    });
+    atualizarPreview();
+  }
+
+  function atualizarPreview() {
+    $('preview').value = aba === 'serradas' ? msgSerradas() : aba === 'chapas' ? msgChapas() : msgBlocos();
+  }
+
+  async function buscar() {
+    $('status').textContent = 'Buscando no sistema...';
+    try {
+      if (aba === 'enviar') await buscarEnviar();
+      else if (aba === 'grupos') await buscarGrupos();
+      else if (aba === 'serradas') await buscarSerradas();
+      else if (aba === 'aviso') await buscarAviso();
+      else if (aba === 'bot') await carregarBot();
+      else if (aba === 'inicio') await carregarInicio();
+      else if (aba === 'chapas') await buscarChapas();
+      else await buscarBlocos();
+      $('status').textContent = '';
+    } catch (e) {
+      $('status').textContent = 'Erro: ' + e.message;
+    }
+  }
+
+  const PAGINAS = {
+    inicio: ['Início', 'Situação do sistema, do bot e das rotinas automáticas.'],
+    enviar: ['Enviar avisos', 'Serradas prontas para avisar os clientes: confira, aprove e o ZapBerry envia ao grupo de cada um.'],
+    serradas: ['Serradas', 'Monta o texto do material serrado dos últimos 14 dias para colar no chat.'],
+    chapas: ['Chapas', 'Estoque de chapas do cliente, pronto para enviar.'],
+    blocos: ['Blocos', 'Blocos do cliente que estão no pátio.'],
+    grupos: ['Grupos', 'Vincule cada cliente ao grupo de WhatsApp dele.'],
+    aviso: ['Aviso geral', 'Uma imagem com saudação para os grupos dos clientes, com pausa entre os envios.'],
+    bot: ['Bot berry', 'Responde perguntas de produção no WhatsApp, só para quem estiver liberado.'],
+  };
+  function ajustarAcoes() {
+    const inicio = aba === 'inicio';
+    const envio = aba === 'enviar';
+    const grupos = aba === 'grupos';
+    const aviso = aba === 'aviso';
+    const botAba = aba === 'bot';
+    const semBusca = aviso || botAba || inicio;
+    const pg = PAGINAS[aba] || PAGINAS.inicio;
+    $('titulo-pagina').textContent = pg[0];
+    $('sub-pagina').textContent = pg[1];
+    $('painel-inicio').style.display = inicio ? 'block' : 'none';
+    $('linha-busca').style.display = semBusca ? 'none' : 'flex';
+    $('lista').style.display = semBusca ? 'none' : '';
+    $('painel-aviso').style.display = aviso ? 'block' : 'none';
+    $('painel-bot').style.display = botAba ? 'block' : 'none';
+    $('acoes-enviar').style.display = envio ? 'flex' : 'none';
+    $('acoes-padrao').style.display = (envio || grupos || semBusca) ? 'none' : 'flex';
+    $('preview').style.display = (envio || grupos || semBusca) ? 'none' : '';
+    $('cliente').placeholder = grupos ? 'Filtrar cliente...' : envio ? '(fila traz tudo — só clicar Buscar)' : 'Cliente (vazio = todos nas serradas)...';
+  }
+
+  document.querySelectorAll('.abas button').forEach((b) => {
+    b.onclick = () => {
+      document.querySelectorAll('.abas button').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+      aba = b.dataset.aba;
+      itens = [];
+      ajustarAcoes();
+      if (aba === 'inicio' || aba === 'enviar' || aba === 'grupos' || aba === 'aviso' || aba === 'bot') buscar();
+      else renderLista(aba === 'serradas' ? 'Buscar traz as serradas dos últimos 14 dias.' : 'Digite o cliente e Buscar.');
+    };
+  });
+  $('buscar').onclick = buscar;
+  $('cliente').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscar(); });
+
+  $('inserir').onclick = () => {
+    const txt = $('preview').value.trim();
+    if (!txt) { $('status').textContent = 'Nada selecionado.'; return; }
+    window.whatsapx.berryInserir(txt);
+    $('status').textContent = 'Enviado pro campo do chat ativo — confere e manda. 📨';
+    setTimeout(() => { $('status').textContent = ''; }, 3500);
+  };
+  $('copiar').onclick = async () => {
+    const txt = $('preview').value.trim();
+    if (!txt) return;
+    await navigator.clipboard.writeText(txt);
+    $('status').textContent = 'Copiado!';
+    setTimeout(() => { $('status').textContent = ''; }, 2000);
+  };
+
+  /* ─── Aba Bot ─── */
+  let BOT = null;            // {config, status, remetentes, log, contas}
+  let botGrupos = null;      // grupos da conta, carregados sob demanda
+  let botGruposErro = '';
+  let botContatos = null;    // conversas privadas da conta: {itens:[{jid,nome,tel}]} ou {erro}
+  let botTimer = null;
+
+  function el(tag, props = {}, ...filhos) {
+    const e = document.createElement(tag);
+    Object.assign(e, props);
+    filhos.forEach((f) => e.append(f));
+    return e;
+  }
+  const fmtHora = (iso) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const maskTel = (t) => (t ? '+' + t : '');
+  function botMsg(txt, erro) { const m = $('bt-msg'); m.textContent = txt || ''; m.style.color = erro ? '#dc2626' : ''; }
+
+  async function chamarBot(p) {
+    const r = await p;
+    if (!r.ok) throw new Error(r.erro || 'falha');
+    return r.dados;
+  }
+
+  /** Lê os campos da tela de volta para o objeto de configuração. */
+  function lerFormBot() {
+    const c = BOT.config;
+    // destino de um bloco (semanal / checagem): o telefone digitado vale no lugar da lista
+    const lerDestino = (idSel, idTel) => {
+      const sel = $(idSel), opt = sel.selectedOptions[0];
+      let destino = sel.value ? { jid: sel.value, nome: (opt && opt.dataset.nome) || sel.value } : null;
+      const telDigitado = $(idTel).value.replace(/\D/g, '');
+      if (telDigitado) {
+        if (telDigitado.length < 10) throw new Error('Telefone de destino incompleto: digite DDD + número.');
+        const t = (telDigitado.length === 10 || telDigitado.length === 11) ? '55' + telDigitado : telDigitado;
+        destino = { jid: t + '@c.us', nome: '+' + t };
+      }
+      return destino;
+    };
+    const destino = lerDestino('bt-ag-destino', 'bt-ag-tel');
+    const destinoSaude = lerDestino('bt-sa-destino', 'bt-sa-tel');
+    return {
+      ...c,
+      ativo: $('bt-ativo').checked,
+      contaId: Number($('bt-conta').value) || c.contaId,
+      gatilho: $('bt-gatilho').value.trim() || 'berry',
+      aceitarMinhas: $('bt-minhas').checked,
+      agenda: {
+        ...c.agenda,
+        ativa: $('bt-ag-ativa').checked,
+        dia: Number($('bt-ag-dia').value),
+        hora: $('bt-ag-hora').value || '07:00',
+        destino,
+      },
+      saude: {
+        ...c.saude,
+        ativa: $('bt-sa-ativa').checked,
+        hora: $('bt-sa-hora').value || '08:00',
+        destino: destinoSaude,
+        soComProblema: !$('bt-sa-sempre').checked,
+        pastaBackup: $('bt-sa-pasta').value.trim(),
+      },
+    };
+  }
+
+  function renderGruposLiberados() {
+    const c = BOT.config;
+    $('bt-n-grupos').textContent = c.grupos.length ? `(${c.grupos.length})` : '';
+    const box = $('bt-grupos'); box.replaceChildren();
+    if (!c.grupos.length) box.append(el('div', { className: 'vazio', textContent: 'Nenhum grupo liberado.' }));
+    c.grupos.forEach((g) => {
+      const rm = el('button', { className: 'bt', textContent: 'Remover' });
+      rm.onclick = () => { c.grupos = c.grupos.filter((x) => x.jid !== g.jid); renderGruposLiberados(); renderDestinos(); };
+      box.append(el('div', { className: 'bt-it' }, el('span', { className: 'n', textContent: g.nome, title: g.nome }), rm));
+    });
+  }
+
+  function renderPicker() {
+    const c = BOT.config;
+    const f = $('bt-pfiltro').value.trim().toLowerCase();
+    const box = $('bt-plista'); box.replaceChildren();
+    if (!botGrupos) { box.append(el('div', { className: 'vazio', textContent: 'Carregando grupos…' })); return; }
+    if (botGruposErro) { box.append(el('div', { className: 'vazio', textContent: botGruposErro })); return; }
+    const lista = botGrupos.filter((g) => !f || g.nome.toLowerCase().includes(f));
+    if (!lista.length) box.append(el('div', { className: 'vazio', textContent: 'Nenhum grupo encontrado.' }));
+    lista.forEach((g) => {
+      const marcado = c.grupos.some((x) => x.jid === g.jid);
+      const cb = el('input', { type: 'checkbox', checked: marcado });
+      cb.onchange = () => {
+        if (cb.checked) { if (!c.grupos.some((x) => x.jid === g.jid)) c.grupos.push({ jid: g.jid, nome: g.nome }); }
+        else c.grupos = c.grupos.filter((x) => x.jid !== g.jid);
+        renderGruposLiberados(); renderDestinos();
+      };
+      const linha = el('label', { className: 'bt-it', style: 'cursor:pointer' }, cb, el('span', { className: 'n', textContent: g.nome, title: g.nome }));
+      box.append(linha);
+    });
+  }
+
+  function renderNumeros() {
+    const c = BOT.config;
+    $('bt-n-nums').textContent = c.numeros.length ? `(${c.numeros.length})` : '';
+    const box = $('bt-nums'); box.replaceChildren();
+    if (!c.numeros.length) box.append(el('div', { className: 'vazio', textContent: 'Nenhum número liberado.' }));
+    c.numeros.forEach((n, i) => {
+      const rm = el('button', { className: 'bt', textContent: 'Remover' });
+      rm.onclick = () => { c.numeros.splice(i, 1); renderNumeros(); renderRecentes(); renderDestinos(); };
+      const idOk = (n.ids || []).length > 0;
+      box.append(el('div', { className: 'bt-it' },
+        el('span', { className: 'n', textContent: n.nome || '(sem nome)' }),
+        el('span', { className: 'm', textContent: (n.tel ? maskTel(n.tel) + ' · ' : '') + (idOk ? 'ID vinculado ✓' : 'aguardando ID (salve)') }), rm));
+    });
+  }
+
+  function renderPickerNums() {
+    const c = BOT.config;
+    const f = $('bt-pfiltro-nums').value.trim().toLowerCase();
+    const box = $('bt-plista-nums'); box.replaceChildren();
+    if (!botContatos) { box.append(el('div', { className: 'vazio', textContent: 'Carregando conversas…' })); return; }
+    if (botContatos.erro) { box.append(el('div', { className: 'vazio', textContent: botContatos.erro })); return; }
+    const lista = botContatos.itens.filter((x) => !f || x.nome.toLowerCase().includes(f) || (x.tel || '').includes(f.replace(/\D/g, '') || '§'));
+    if (!lista.length) box.append(el('div', { className: 'vazio', textContent: 'Nenhuma conversa encontrada.' }));
+    lista.forEach((x) => {
+      const existente = () => c.numeros.findIndex((n) => (n.ids || []).includes(x.jid) || (x.tel && n.tel === x.tel));
+      const cb = el('input', { type: 'checkbox', checked: existente() >= 0 });
+      cb.onchange = () => {
+        const i = existente();
+        if (cb.checked && i < 0) c.numeros.push({ nome: x.nome, tel: x.tel || '', ids: [x.jid] });
+        else if (!cb.checked && i >= 0) c.numeros.splice(i, 1);
+        renderNumeros(); renderRecentes(); renderDestinos();
+      };
+      box.append(el('label', { className: 'bt-it', style: 'cursor:pointer' }, cb,
+        el('span', { className: 'n', textContent: x.nome, title: x.nome }),
+        el('span', { className: 'm', textContent: x.tel ? maskTel(x.tel) : '' })));
+    });
+  }
+
+  function jaLiberado(r) {
+    const c = BOT.config;
+    const d8 = (s) => String(s || '').replace(/\D/g, '').slice(-8);
+    return c.numeros.some((n) => (n.ids || []).includes(r.autor) || (r.tel && d8(n.tel) && d8(n.tel) === d8(r.tel)));
+  }
+
+  function renderRecentes() {
+    const box = $('bt-recentes'); box.replaceChildren();
+    const lista = BOT.remetentes.filter((r) => !jaLiberado(r));
+    if (!lista.length) { box.append(el('div', { className: 'vazio', textContent: 'Ninguém novo escreveu a palavra-chamada desde que o ZapBerry abriu.' })); return; }
+    lista.forEach((r) => {
+      const bt = el('button', { className: 'bt ok', textContent: 'Liberar' });
+      bt.onclick = async () => {
+        try {
+          // grava no objeto da tela; o Salvar efetiva (evita perder outras edições pendentes)
+          BOT.config.numeros.push({ nome: r.nome || '', tel: r.tel || '', ids: [r.autor] });
+          renderNumeros(); renderRecentes();
+          botMsg('Liberado na tela — clique em Salvar configuração para valer.');
+        } catch (e) { botMsg(e.message, true); }
+      };
+      box.append(el('div', { className: 'bt-it' },
+        el('span', { className: 'n', textContent: r.nome || r.tel || r.autor }),
+        el('span', { className: 'm', textContent: (r.tel ? maskTel(r.tel) + ' · ' : '') + (r.grupo ? 'em grupo' : 'no privado') + ' · ' + fmtHora(r.quando) }), bt));
+    });
+  }
+
+  function renderDestinos() {
+    const c = BOT.config;
+    preencherDestino($('bt-ag-destino'), c.agenda.destino);
+    preencherDestino($('bt-sa-destino'), c.saude.destino);
+  }
+
+  function preencherDestino(sel, destinoAtual) {
+    const c = BOT.config;
+    const antes = sel.value; // mantém a escolha ainda não salva ao recarregar as opções
+    const atual = antes || (destinoAtual && destinoAtual.jid) || '';
+    sel.replaceChildren(el('option', { value: '', textContent: '— escolha um grupo ou número —' }));
+    const vistos = new Set();
+    const add = (g, rotulo) => {
+      if (!g || !g.jid || vistos.has(g.jid)) return;
+      vistos.add(g.jid);
+      const o = el('option', { value: g.jid, textContent: `${rotulo || (g.jid.endsWith('@g.us') ? 'Grupo' : 'Privado')}: ${g.nome}` });
+      o.dataset.nome = g.nome;
+      sel.append(o);
+    };
+    if (destinoAtual) add(destinoAtual);
+    c.grupos.forEach((g) => add(g, 'Grupo'));
+    c.numeros.forEach((n) => {
+      if (n.tel) add({ jid: n.tel + '@c.us', nome: n.nome || '+' + n.tel }, 'Privado');
+      // liberado só pelo ID do WhatsApp (sem telefone): o ID (@lid ou @c.us) também é destino válido
+      else (n.ids || []).filter((i) => /@(c\.us|lid)$/.test(i)).slice(0, 1).forEach((i) => add({ jid: i, nome: n.nome || i }, 'Privado'));
+    });
+    (botGrupos || []).forEach((g) => add(g, 'Grupo'));
+    if (botContatos && botContatos.itens) botContatos.itens.forEach((x) => add({ jid: x.tel ? x.tel + '@c.us' : x.jid, nome: x.nome }, 'Privado'));
+    if (atual && !vistos.has(atual)) add({ jid: atual, nome: atual });
+    sel.value = atual;
+  }
+
+  function renderLogBot() {
+    const box = $('bt-log'); box.replaceChildren();
+    if (!BOT.log.length) { box.append('Sem atividade ainda.'); return; }
+    const rot = { pergunta: '💬', negado: '🚫 ignorado', limite: '⏱ limite', semanal: '🗓 semanal', saude: '🩺 checagem', erro: '❌', sistema: '⚙️' };
+    BOT.log.slice(0, 30).forEach((l) => {
+      let txt;
+      if (l.tipo === 'pergunta') txt = `${rot.pergunta} ${l.de}: “${l.texto}” → ${l.intencao}, ${l.enviadas}/${l.mensagens} msg, ${l.ms} ms${l.erro ? ' · erro: ' + l.erro : ''}`;
+      else if (l.tipo === 'negado') txt = `${rot.negado}: ${l.de} (não liberado)`;
+      else if (l.tipo === 'semanal') txt = `${rot.semanal} → ${l.destino}: ${l.enviadas}/${l.mensagens} msg`;
+      else if (l.tipo === 'saude') txt = `${rot.saude} → ${l.destino}: ${l.msg}`;
+      else txt = `${rot[l.tipo] || ''} ${l.msg || l.de || ''}`;
+      box.append(el('div', { textContent: `${fmtHora(l.quando)}  ${txt}` }));
+    });
+  }
+
+  function renderStatusBot() {
+    const s = BOT.status, c = BOT.config;
+    const e = $('bt-status');
+    e.className = 'bt-st ' + (s.ativo && s.escutando ? 'on' : 'off');
+    e.textContent = !s.ativo ? '· desligado' : s.escutando ? '· ligado e escutando' : '· ligado, aguardando o WhatsApp carregar…';
+    $('bt-exemplo').textContent = `${c.gatilho} relatório`;
+  }
+
+  function renderBot() {
+    const c = BOT.config;
+    $('bt-ativo').checked = c.ativo;
+    const sc = $('bt-conta'); sc.replaceChildren();
+    BOT.contas.forEach((k) => sc.append(el('option', { value: k.id, textContent: k.nome })));
+    sc.value = c.contaId;
+    $('bt-gatilho').value = c.gatilho;
+    $('bt-minhas').checked = c.aceitarMinhas;
+    $('bt-ag-ativa').checked = c.agenda.ativa;
+    $('bt-ag-dia').value = String(c.agenda.dia);
+    $('bt-ag-hora').value = c.agenda.hora;
+    $('bt-ag-tel').value = '';
+    $('bt-sa-ativa').checked = c.saude.ativa;
+    $('bt-sa-hora').value = c.saude.hora;
+    $('bt-sa-sempre').checked = !c.saude.soComProblema;
+    $('bt-sa-pasta').value = c.saude.pastaBackup || '';
+    $('bt-sa-tel').value = '';
+    $('bt-ag-destino').value = ''; $('bt-sa-destino').value = ''; // recarrega a partir do que foi salvo
+    renderStatusBot(); renderGruposLiberados(); renderNumeros(); renderRecentes(); renderDestinos(); renderLogBot();
+  }
+
+  /** Atualiza só o que muda sozinho (status, quem escreveu, log) sem pisar nas edições da tela. */
+  async function atualizarBotVivo() {
+    if (aba !== 'bot' || !BOT) return;
+    try {
+      const d = await chamarBot(window.whatsapx.botEstado());
+      BOT.status = d.status; BOT.remetentes = d.remetentes; BOT.log = d.log;
+      // IDs vinculados em segundo plano entram nos números da tela (sem pisar no resto das edições)
+      BOT.config.numeros.forEach((n) => {
+        const salvo = d.config.numeros.find((x) => x.tel && x.tel === n.tel);
+        if (salvo && (salvo.ids || []).length) n.ids = [...new Set([...(n.ids || []), ...salvo.ids])];
+      });
+      renderStatusBot(); renderNumeros(); renderRecentes(); renderLogBot();
+    } catch { /* tenta no próximo ciclo */ }
+  }
+
+  async function carregarBot() {
+    BOT = await chamarBot(window.whatsapx.botEstado());
+    renderBot();
+    clearInterval(botTimer);
+    botTimer = setInterval(atualizarBotVivo, 5000);
+  }
+
+  $('bt-escolher').onclick = async () => {
+    const p = $('bt-picker');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'none') return;
+    botGrupos = null; botGruposErro = ''; renderPicker();
+    try {
+      const cid = Number($('bt-conta').value) || BOT.config.contaId;
+      const r = await chamarBot(window.whatsapx.botGrupos(cid));
+      if (r.erro) { botGruposErro = r.erro; botGrupos = []; } else { botGrupos = r.grupos; botMsg(''); }
+    } catch (e) { botGruposErro = e.message; botGrupos = []; }
+    renderPicker(); renderDestinos();
+  };
+  $('bt-pfiltro').oninput = renderPicker;
+
+  $('bt-escolher-nums').onclick = async () => {
+    const p = $('bt-picker-nums');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'none') return;
+    botContatos = null; renderPickerNums();
+    try {
+      const cid = Number($('bt-conta').value) || BOT.config.contaId;
+      const r = await chamarBot(window.whatsapx.botContatos(cid));
+      botContatos = r.erro ? { erro: r.erro } : { itens: r.contatos };
+    } catch (e) { botContatos = { erro: e.message }; }
+    renderPickerNums(); renderDestinos();
+  };
+  $('bt-pfiltro-nums').oninput = renderPickerNums;
+
+  $('bt-vincular').onclick = async () => {
+    try {
+      botMsg('Procurando o ID do WhatsApp de cada número…');
+      // grava a tela antes (números novos entram na configuração) e então vincula
+      BOT.config = await chamarBot(window.whatsapx.botSalvar(lerFormBot()));
+      await new Promise((r) => setTimeout(r, 2500));
+      const d = await chamarBot(window.whatsapx.botEstado());
+      BOT.config.numeros = d.config.numeros;
+      renderNumeros();
+      const faltam = BOT.config.numeros.filter((n) => n.tel && !(n.ids || []).length).length;
+      botMsg(faltam ? `${faltam} número(s) sem ID: o WhatsApp não achou o telefone (confira o número, ou escolha a pessoa em “Escolher entre as conversas”).` : 'Todos os números têm ID vinculado ✔', !!faltam);
+    } catch (e) { botMsg('Erro: ' + e.message, true); }
+  };
+
+  $('bt-add').onclick = () => {
+    const tel = $('bt-tel').value.replace(/\D/g, '');
+    if (tel.length < 10) { botMsg('Digite o telefone com DDD (10 ou 11 dígitos).', true); return; }
+    const norm = (tel.length === 10 || tel.length === 11) ? '55' + tel : tel;
+    if (!BOT.config.numeros.some((n) => n.tel === norm)) BOT.config.numeros.push({ nome: $('bt-nome').value.trim(), tel: norm, ids: [] });
+    $('bt-nome').value = ''; $('bt-tel').value = '';
+    renderNumeros(); renderRecentes();
+    botMsg('Adicionado na tela — clique em Salvar configuração para valer.');
+  };
+
+  $('bt-salvar').onclick = async () => {
+    try {
+      BOT.config = await chamarBot(window.whatsapx.botSalvar(lerFormBot()));
+      renderBot();
+      botMsg('Salvo ✔');
+      setTimeout(() => botMsg(''), 3000);
+    } catch (e) { botMsg('Erro ao salvar: ' + e.message, true); }
+  };
+
+  $('bt-perguntar').onclick = async () => {
+    const q = $('bt-teste').value.trim();
+    if (!q) return;
+    const out = $('bt-resp');
+    out.style.display = 'block'; out.textContent = 'Consultando o sistema…';
+    try {
+      const r = await chamarBot(window.whatsapx.botTestar(q));
+      out.textContent = r.mensagens.join('\n\n— — — próxima mensagem — — —\n\n') + (r.erro ? `\n\n[erro interno: ${r.erro}]` : '');
+    } catch (e) { out.textContent = 'Erro: ' + e.message; }
+  };
+  $('bt-teste').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('bt-perguntar').click(); });
+
+  async function rodarSaudeUI(enviar) {
+    const out = $('bt-sa-resp');
+    out.style.display = 'block'; out.textContent = 'Conferindo o sistema…';
+    try {
+      // grava a tela antes: pasta de backup e destino digitados passam a valer
+      BOT.config = await chamarBot(window.whatsapx.botSalvar(lerFormBot()));
+      const r = await chamarBot(window.whatsapx.botSaudeAgora(enviar ? { enviar: true, forcar: true } : { enviar: false }));
+      out.textContent = r.mensagens.join('\n\n— — — próxima mensagem — — —\n\n') + (enviar ? `\n\n[enviado: ${r.enviadas}/${r.mensagens.length} mensagens]` : '');
+      renderBot();
+    } catch (e) { out.textContent = 'Erro: ' + e.message; }
+  }
+  $('bt-sa-ver').onclick = () => rodarSaudeUI(false);
+  $('bt-sa-enviar').onclick = async () => {
+    if (!(await confirmar('Enviar agora a checagem para o destino escolhido?', { titulo: 'Checagem de saúde', sim: 'Enviar agora' }))) return;
+    rodarSaudeUI(true);
+  };
+
+  $('bt-ag-agora').onclick = async () => {
+    const dest = $('bt-ag-destino').value;
+    if (!dest) { botMsg('Escolha o grupo de destino e salve antes.', true); return; }
+    if (!(await confirmar('Enviar agora o relatório completo da semana passada para o grupo escolhido?\n(Salve a configuração antes, se mudou o destino.)', { titulo: 'Relatório semanal', sim: 'Enviar agora' }))) return;
+    try {
+      botMsg('Gerando e enviando…');
+      const r = await chamarBot(window.whatsapx.botSemanalAgora());
+      botMsg(`Enviado: ${r.enviadas}/${r.mensagens} mensagens.`);
+    } catch (e) { botMsg('Erro: ' + e.message, true); }
+  };
+
+  window.whatsapx.onTheme((t) => { document.body.dataset.theme = t; });
+
+  // Comando /estoque /blocos /serrado no chat → cai aqui com a aba + cliente prontos
+  function setAba(nome) {
+    document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('on', x.dataset.aba === nome));
+    aba = nome;
+    itens = [];
+    ajustarAcoes(); // botões certos por aba: Enviar = "Revisei"; Blocos/Chapas/Serradas = Inserir/Copiar
+  }
+  window.whatsapx.onBerryPreset(async (p) => {
+    setAba(p.aba);
+    $('cliente').value = p.cliente || '';
+    if (BERRY) await buscar();
+    else setTimeout(buscar, 400); // config ainda carregando
+  });
+
+  /* ── Confirmação dentro da tela. A caixa de confirmação nativa do Electron/Windows deixa os campos de texto sem teclado depois de aberto. ── */
+  function confirmar(texto, { titulo = 'Confirmar', sim = 'Confirmar' } = {}) {
+    return new Promise((resolve) => {
+      const anterior = document.activeElement;
+      $('mc-titulo').textContent = titulo;
+      $('mc-texto').textContent = texto;
+      $('mc-sim').textContent = sim;
+      const tecla = (e) => { if (e.key === 'Escape') { e.preventDefault(); fechar(false); } };
+      const fechar = (resposta) => {
+        $('modal-confirma').style.display = 'none';
+        document.removeEventListener('keydown', tecla, true);
+        $('mc-sim').onclick = null; $('mc-nao').onclick = null;
+        if (anterior && typeof anterior.focus === 'function') anterior.focus();
+        resolve(resposta);
+      };
+      document.addEventListener('keydown', tecla, true);
+      $('mc-sim').onclick = () => fechar(true);
+      $('mc-nao').onclick = () => fechar(false);
+      $('modal-confirma').style.display = 'flex';
+      $('mc-sim').focus();
+    });
+  }
+
+  /* ── Conta do sistema (login do ZapBerry no banco) ── */
+  function atualizarContaSis(st) {
+    $('dot-sis').className = 'dot ' + (st.configurado ? 'on' : 'off');
+    $('sis-nome').textContent = st.configurado ? 'Sistema conectado' : 'Sem login no sistema';
+    $('sis-det').textContent = st.configurado ? st.email : 'Conecte para usar o ZapBerry';
+  }
+  function esconderLogin() { $('login-sis').style.display = 'none'; }
+  async function mostrarLogin() {
+    $('ls-erro').textContent = '';
+    $('ls-senha').value = '';
+    $('login-sis').style.display = 'flex';
+    try {
+      const st = await window.whatsapx.berryLoginStatus();
+      $('ls-sair').style.display = st.configurado ? '' : 'none';
+      if (st.email) $('ls-email').value = st.email;
+    } catch { /* segue com o padrão */ }
+    setTimeout(() => $('ls-senha').focus(), 50);
+  }
+  async function conectarSistema() {
+    const email = $('ls-email').value.trim();
+    const senha = $('ls-senha').value;
+    if (!email || !senha) { $('ls-erro').textContent = 'Informe o e-mail e a senha.'; return; }
+    $('ls-ok').disabled = true; $('ls-ok').textContent = 'Conectando…'; $('ls-erro').textContent = '';
+    try {
+      const r = await window.whatsapx.berryLoginSalvar(email, senha);
+      if (!r.ok) { $('ls-erro').textContent = r.erro || 'Não foi possível conectar.'; return; }
+      $('ls-senha').value = '';
+      esconderLogin();
+      atualizarContaSis(r);
+      carregarClientes();
+      buscar();
+    } finally {
+      $('ls-ok').disabled = false; $('ls-ok').textContent = 'Conectar';
+    }
+  }
+  $('sis-botao').onclick = mostrarLogin;
+  $('ls-ok').onclick = conectarSistema;
+  $('ls-fechar').onclick = esconderLogin;
+  $('ls-senha').addEventListener('keydown', (e) => { if (e.key === 'Enter') conectarSistema(); });
+  $('ls-sair').onclick = async () => {
+    const st = await window.whatsapx.berryLoginSair();
+    atualizarContaSis(st);
+    esconderLogin();
+    if (aba === 'inicio') buscar();
+  };
+
+  /* ── Página INÍCIO ── */
+  const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  function kpi(id, ponto, texto, detalhe) {
+    $(id).replaceChildren(el('span', { className: 'pt ' + ponto }), texto);
+    $(id + '-d').textContent = detalhe || '';
+  }
+  async function carregarInicio() {
+    const st = await window.whatsapx.berryLoginStatus();
+    atualizarContaSis(st);
+    kpi('ini-sis', st.configurado ? 'on' : 'off', st.configurado ? 'Conectado' : 'Sem login', st.configurado ? st.email : 'Clique em “Conta” (menu à esquerda) para conectar');
+    try {
+      const d = await chamarBot(window.whatsapx.botEstado());
+      const c = d.config, s = d.status;
+      kpi('ini-bot', s.ativo ? (s.escutando ? 'on' : '') : 'off', !s.ativo ? 'Desligado' : s.escutando ? 'Escutando' : 'Aguardando o WhatsApp',
+        `${c.grupos.length} grupo(s) e ${c.numeros.length} número(s) liberados · palavra “${c.gatilho}”`);
+      kpi('ini-sem', c.agenda.ativa ? 'on' : 'off', c.agenda.ativa ? 'Ativo' : 'Desligado',
+        c.agenda.ativa ? `${DIAS_SEMANA[c.agenda.dia]} às ${c.agenda.hora}` : 'Relatório semanal automático');
+      kpi('ini-sau', c.saude.ativa ? 'on' : 'off', c.saude.ativa ? 'Ativa' : 'Desligada',
+        c.saude.ativa ? `todo dia às ${c.saude.hora}` : 'Checagem diária de saúde');
+    } catch {
+      ['ini-bot', 'ini-sem', 'ini-sau'].forEach((id) => kpi(id, '', '—', 'indisponível agora'));
+    }
+  }
+  window.whatsapx.getBerryConfig().then(async (b) => {
+    BERRY = b;
+    const st = await window.whatsapx.berryLoginStatus();
+    atualizarContaSis(st);
+    ajustarAcoes();
+    if (!st.configurado) mostrarLogin();
+    else carregarClientes();
+    buscar();
+  });
+  window.whatsapx.pronta();
+</script>
+</body>
+</html>

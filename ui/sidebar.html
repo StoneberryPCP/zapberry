@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ZapBerry</title>
+<style>
+  :root {
+    --bg: #f0f2f5; --bg2: #e6e9ec; --item: #ffffff; --line: #d1d7db;
+    --txt: #111b21; --muted: #667781; --badge: #ef4444;
+  }
+  [data-theme="dark"] {
+    --bg: #0f171c; --bg2: #131f26; --item: #202c33; --line: #26343d;
+    --txt: #e9edef; --muted: #8696a0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  html, body { height: 100%; }
+  body {
+    width: 76px; background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    border-right: 1px solid var(--line);
+    font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0 8px;
+  }
+  .logo { width: 38px; height: 38px; flex-shrink: 0; margin-bottom: 4px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
+  .logo svg { width: 100%; height: 100%; }
+  #contas { display: flex; flex-direction: column; gap: 4px; align-items: center;
+    overflow-y: auto; flex: 1; width: 100%; padding: 4px 0; }
+  #contas::-webkit-scrollbar { width: 0; }
+  .conta { position: relative; width: 56px; padding: 4px 0 2px; border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+    transition: background .12s, transform .1s; flex-shrink: 0; }
+  .conta:hover { background: color-mix(in srgb, var(--cor) 14%, transparent); transform: translateY(-1px); }
+  .conta .av { width: 44px; height: 44px; position: relative; transition: filter .15s; }
+  .conta .av svg { width: 100%; height: 100%; }
+  .conta.ativa .av { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--cor) 75%, transparent)); }
+  .conta.ativa::before { content: ''; position: absolute; left: -8px; top: 50%;
+    transform: translateY(-60%); width: 4px; height: 26px; border-radius: 0 4px 4px 0; background: var(--cor); }
+  .conta .badge { position: absolute; top: -2px; right: 0; min-width: 18px; height: 18px;
+    border-radius: 9px; background: var(--badge); color: #fff; font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+    border: 2px solid var(--bg); z-index: 2; }
+  .conta .pop { position: absolute; bottom: 14px; right: 2px; font-size: 11px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); z-index: 2; }
+  .conta .nome { font-size: 9px; color: var(--muted); font-weight: 700; max-width: 60px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conta.ativa .nome { color: var(--cor); }
+  .conta.popped .av { opacity: .55; }
+  .sep { width: 36px; height: 1px; background: var(--line); margin: 2px 0; flex-shrink: 0; }
+  .secoes { display: grid; grid-template-columns: repeat(2, 30px); gap: 4px; flex-shrink: 0; padding: 2px 0; }
+  .secoes button { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line);
+    background: transparent; font-size: 14px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: all .12s; padding: 0; }
+  .secoes button:hover { border-color: #22c55e; background: color-mix(in srgb, #22c55e 12%, transparent); transform: scale(1.08); }
+  .btn { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed var(--muted);
+    background: transparent; color: var(--muted); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .12s; }
+  .btn:hover { border-color: #22c55e; color: #22c55e; transform: scale(1.06); }
+  .btn.snip { border-style: solid; font-size: 16px; }
+  #rename { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none;
+    align-items: center; justify-content: center; }
+  #rename.on { display: flex; }
+  #rename .box { background: var(--item); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 66px; }
+  #rename input { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 4px;
+    font-size: 10px; background: var(--bg); color: var(--txt); outline: none; }
+</style>
+</head>
+<body data-theme="dark">
+  <div class="logo" id="logo-app" title="ZapBerry"></div>
+  <div class="secoes" title="Seções da conta ativa">
+    <button data-s="todas" title="Todas as conversas">💬</button>
+    <button data-s="nao-lidas" title="Não lidas">🔵</button>
+    <button data-s="grupos" title="Grupos">👥</button>
+    <button data-s="favoritas" title="Favoritas">⭐</button>
+    <button data-s="status" title="Status">📷</button>
+    <button data-s="midias" title="Mídias da conversa aberta (fotos, vídeos, docs)">🖼️</button>
+  </div>
+  <div class="sep"></div>
+  <div id="contas"></div>
+  <div class="sep"></div>
+  <button class="btn snip" id="berry" title="ZapBerry — avisos de serrada e estoque do sistema Stoneberry"><img src="../assets/logo_sb.png" alt="Stoneberry" style="width:26px;height:26px;object-fit:contain"></button>
+  <button class="btn snip" id="snip" title="Respostas rápidas — /atalho + espaço no chat">⚡</button>
+  <button class="btn snip" id="tema" title="Tema">🌓</button>
+  <button class="btn" id="add" title="Nova conta (Ctrl+N) · Ctrl+1..9 troca · Ctrl+Shift+W mostra/esconde">+</button>
+
+  <div id="rename"><div class="box"><input id="rename-input" maxlength="24" /></div></div>
+
+<script>
+  // Logo do app (balão + X) tingida por cor — mesma arte do ícone, em SVG
+  function logoSvg(cor, cor2) {
+    return `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g${cor.replace('#','')}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${cor}"/><stop offset="1" stop-color="${cor2 || cor}"/>
+      </linearGradient></defs>
+      <circle cx="256" cy="256" r="250" fill="url(#g${cor.replace('#','')})"/>
+      <circle cx="256" cy="246" r="130" fill="#fff" stroke="#fff" stroke-width="34"/>
+      <polygon points="122,448 160,336 242,372" fill="#fff"/>
+      <image href="../assets/logo_sb.png" x="166" y="156" width="180" height="180"/>
+    </svg>`;
+  }
+  function escurecer(hex, f = 0.72) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+
+  document.getElementById('logo-app').innerHTML = logoSvg('#34d370', '#16a34a');
+
+  const $contas = document.getElementById('contas');
+  let estado = { contas: [], ativa: null };
+  let badges = {};
+  let renameId = null;
+
+  function render() {
+    $contas.innerHTML = '';
+    estado.contas.forEach((c, i) => {
+      const el = document.createElement('div');
+      el.className = 'conta' + (c.id === estado.ativa && !c.popped ? ' ativa' : '') + (c.popped ? ' popped' : '');
+      el.style.setProperty('--cor', c.cor);
+      el.title = `${c.nome} (Ctrl+${i + 1})${c.popped ? ' — em janela separada' : ''}`;
+
+      const av = document.createElement('div');
+      av.className = 'av';
+      av.innerHTML = logoSvg(c.cor, escurecer(c.cor));
+      el.appendChild(av);
+
+      const n = badges[c.id] || 0;
+      if (n > 0) {
+        const b = document.createElement('span');
+        b.className = 'badge';
+        b.textContent = n > 99 ? '99+' : n;
+        el.appendChild(b);
+      }
+      if (c.popped) {
+        const p = document.createElement('span');
+        p.className = 'pop';
+        p.textContent = '🗗';
+        el.appendChild(p);
+      }
+      const nome = document.createElement('span');
+      nome.className = 'nome';
+      nome.textContent = c.nome;
+      el.appendChild(nome);
+
+      el.onclick = () => window.whatsapx.selectConta(c.id);
+      el.oncontextmenu = (e) => { e.preventDefault(); window.whatsapx.menuConta(c.id); };
+      $contas.appendChild(el);
+    });
+  }
+
+  document.getElementById('add').onclick = () => window.whatsapx.addConta();
+  document.getElementById('snip').onclick = () => window.whatsapx.abrirSnippets();
+  document.getElementById('berry').onclick = () => window.whatsapx.abrirBerry();
+  document.querySelectorAll('.secoes button').forEach((b) => {
+    b.onclick = () => window.whatsapx.waSecao(b.dataset.s);
+  });
+
+  // Tema: cicla Sistema → Claro → Escuro (ícone e tooltip acompanham)
+  const TEMAS = ['system', 'light', 'dark'];
+  const TEMA_ICONE = { system: '🌓', light: '☀️', dark: '🌙' };
+  const TEMA_NOME = { system: 'Sistema', light: 'Claro', dark: 'Escuro' };
+  let temaAtual = 'system';
+  const $tema = document.getElementById('tema');
+  function mostrarTema() {
+    $tema.textContent = TEMA_ICONE[temaAtual];
+    $tema.title = `Tema: ${TEMA_NOME[temaAtual]} (clique pra trocar)`;
+  }
+  $tema.onclick = () => {
+    temaAtual = TEMAS[(TEMAS.indexOf(temaAtual) + 1) % TEMAS.length];
+    window.whatsapx.setTema(temaAtual);
+    mostrarTema();
+  };
+  window.whatsapx.onTemaEscolha((t) => { temaAtual = t; mostrarTema(); });
+  window.whatsapx.getTema().then((t) => { temaAtual = t; mostrarTema(); });
+
+  const $rename = document.getElementById('rename');
+  const $renameInput = document.getElementById('rename-input');
+  window.whatsapx.onPedirRename((id) => {
+    renameId = id;
+    const c = estado.contas.find(x => x.id === id);
+    $renameInput.value = c ? c.nome : '';
+    $rename.classList.add('on');
+    setTimeout(() => { $renameInput.focus(); $renameInput.select(); }, 30);
+  });
+  $renameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      window.whatsapx.renameConta(renameId, $renameInput.value);
+      $rename.classList.remove('on');
+    } else if (e.key === 'Escape') {
+      $rename.classList.remove('on');
+    }
+  });
+  $rename.addEventListener('click', (e) => { if (e.target === $rename) $rename.classList.remove('on'); });
+
+  window.whatsapx.onContas((d) => { estado = d; render(); });
+  window.whatsapx.onBadges((d) => { badges = d; render(); });
+  window.whatsapx.onTheme((t) => { document.body.dataset.theme = t; });
+  window.whatsapx.pronta();
+</script>
+</body>
+</html>
