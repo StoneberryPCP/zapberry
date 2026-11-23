@@ -1,7 +1,7 @@
 {
   "name": "zapberry",
   "productName": "ZapBerry",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "WhatsApp multi-conta integrado ao sistema Stoneberry: avisos de serrada, estoque do cliente, respostas rápidas.",
   "main": "main.js",
   "author": "Stoneberry",
