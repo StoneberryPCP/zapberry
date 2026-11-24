@@ -337,34 +337,76 @@ ipcRenderer.on('reacao', (_e, r) => { reacao = r || null; });
 // Linha da mensagem (data-id "true_..."/"false_...") + se o clique caiu na bolha.
 // Bolha = algum elemento entre o alvo e a linha bem mais estreito que a linha;
 // a margem vazia ao lado só tem wrappers da largura toda.
+// Devolve { id } quando é pra reagir, senão { motivo } (vai pro log de diagnóstico).
 function mensagemNaBolha(alvo) {
-  if (!(alvo instanceof Element)) return null;
-  if (alvo.closest('#pane-side, footer, header, a, button, [role="button"], input, textarea, [contenteditable="true"], img, video, audio, canvas')) return null;
+  if (!(alvo instanceof Element)) return { motivo: 'alvo não é elemento' };
+  if (alvo.closest('#pane-side, footer, header')) return { motivo: 'fora da conversa' };
+  // coisas clicáveis DENTRO da bolha (link, botão, campo, mídia) seguem normais;
+  // img pequena é emoji no meio do texto — conta como texto
+  const clicavel = alvo.closest('a, button, input, textarea, [contenteditable="true"], video, audio, canvas');
+  if (clicavel) return { motivo: `clicável (${clicavel.tagName})` };
+  if (alvo.tagName === 'IMG' && alvo.getBoundingClientRect().width > 48) return { motivo: 'imagem' };
   const linha = alvo.closest('[data-id]');
-  if (!linha) return null;
+  if (!linha) return { motivo: 'sem data-id' };
   const id = linha.getAttribute('data-id') || '';
-  if (!/^(true|false)_\S{5,200}$/.test(id)) return null;
+  // formato antigo "false_<chat>_<id>[_<autor>]" ou novo só "<id>" (ex.: 3A0ABB6B875D1E8C9990)
+  if (!/^[\w@.:-]{6,200}$/.test(id)) return { motivo: `data-id estranho (${id.slice(0, 40)})` };
   const largura = linha.getBoundingClientRect().width;
-  if (!largura) return null;
+  if (!largura) return { motivo: 'linha sem largura' };
   for (let el = alvo; el && el !== linha; el = el.parentElement) {
     const w = el.getBoundingClientRect().width;
-    if (w > 0 && w < largura * 0.85) return id;
+    if (w > 0 && w < largura * 0.85) return { id };
   }
-  return null;
+  return { motivo: 'ao lado da bolha' };
 }
+
+// Diagnóstico: caminho do alvo até 8 níveis acima (tag, role, data-*)
+function caminho(alvo) {
+  const partes = [];
+  for (let el = alvo, i = 0; el && el !== document.body && i < 8; el = el.parentElement, i++) {
+    const dados = [...el.attributes].filter((a) => a.name.startsWith('data-') || a.name === 'role')
+      .map((a) => `${a.name}=${a.value.slice(0, 30)}`).join(',');
+    partes.push(`${el.tagName.toLowerCase()}[w=${Math.round(el.getBoundingClientRect().width)}${dados ? ' ' + dados : ''}]`);
+  }
+  return partes.join(' < ');
+}
+
+// Aviso rápido no rodapé da conversa (só quando a reação falha)
+function avisoTela(texto) {
+  try {
+    let el = document.getElementById('zapberry-aviso');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'zapberry-aviso';
+      el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99999;'
+        + 'background:#111b21;color:#e9edef;border:1px solid #2a3942;border-radius:10px;padding:8px 14px;'
+        + 'font:13px Segoe UI,sans-serif;max-width:70vw;box-shadow:0 6px 20px rgba(0,0,0,.4);pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = texto;
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.display = 'none'; }, 3500);
+  } catch { /* ignore */ }
+}
+ipcRenderer.on('reacao-resultado', (_e, txt) => avisoTela(txt));
 
 // 2º mousedown seguido seleciona palavra — na bolha, segura a seleção
 window.addEventListener('mousedown', (e) => {
   if (!reacao || e.button !== 0 || e.detail !== 2) return;
-  if (mensagemNaBolha(e.target)) e.preventDefault();
+  if (mensagemNaBolha(e.target).id) e.preventDefault();
 }, true);
 
 window.addEventListener('dblclick', (e) => {
   if (!reacao || e.button !== 0) return;
-  const id = mensagemNaBolha(e.target);
-  if (!id) return;
+  const r = mensagemNaBolha(e.target);
+  if (!r.id) {
+    // só anota no log o que indica mudança do WhatsApp (clique ao lado/em link/mídia é normal)
+    if (/data-id|sem largura/.test(r.motivo)) log(`duplo clique sem reação: ${r.motivo} · ${caminho(e.target)}`);
+    return;
+  }
   e.preventDefault();
   e.stopImmediatePropagation();
   try { window.getSelection()?.removeAllRanges(); } catch { /* ignore */ }
-  ipcRenderer.send('reagir-msg', id);
+  ipcRenderer.send('reagir-msg', r.id);
 }, true);

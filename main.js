@@ -465,8 +465,9 @@ const REACOES = ['👍', '❤️', '😂', '😮', '😢', '🙏', '✅', '👏'
 
 ipcMain.on('reagir-msg', async (e, msgId) => {
   const emoji = cfg.reacao;
-  if (!emoji || typeof msgId !== 'string' || !/^(true|false)_\S{5,200}$/.test(msgId)) return;
+  if (!emoji || typeof msgId !== 'string' || !/^[\w@.:-]{6,200}$/.test(msgId)) return;
   const wc = e.sender;
+  const responder = (txt) => { try { (e.senderFrame ?? wc).send('reacao-resultado', txt); } catch { /* frame fechou */ } };
   await injetarWaJs(wc);
   const script = `(async () => {
     const dorme = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -475,7 +476,24 @@ ipcMain.on('reagir-msg', async (e, msgId) => {
       await dorme(300);
     }
     if (typeof WPP === 'undefined' || !WPP.isReady) return 'WPP nao carregou';
-    await WPP.chat.sendReactionToMessage(${JSON.stringify(msgId)}, ${JSON.stringify(emoji)});
+    const ID = ${JSON.stringify(msgId)};
+    // id completo (formato antigo): reage direto
+    if (/^(true|false)_/.test(ID)) {
+      await WPP.chat.sendReactionToMessage(ID, ${JSON.stringify(emoji)});
+      return 'ok';
+    }
+    // id curto (formato novo do WhatsApp): acha a mensagem pelo id dentro do chat aberto
+    const chat = WPP.chat.getActiveChat();
+    const doChat = (m) => !chat || String(m.id.remote?._serialized ?? m.id.remote) === chat.id._serialized;
+    let msg = null;
+    try { msg = WPP.whatsapp.MsgStore.getModelsArray().find((m) => m.id && m.id.id === ID && doChat(m)); } catch (e) { /* segue */ }
+    if (!msg && chat) {
+      const lista = await WPP.chat.getMessages(chat.id._serialized, { count: 300 });
+      const achou = lista.find((m) => m.id && m.id.id === ID);
+      if (achou) msg = achou.id._serialized;
+    }
+    if (!msg) return 'mensagem nao encontrada no chat aberto';
+    await WPP.chat.sendReactionToMessage(msg, ${JSON.stringify(emoji)});
     return 'ok';
   })()`;
   try {
@@ -486,6 +504,7 @@ ipcMain.on('reagir-msg', async (e, msgId) => {
       fs.appendFileSync(path.join(app.getPath('userData'), 'zapberry-debug.log'),
         `${new Date().toISOString()} reagir-msg ERRO (${msgId}): ${err?.message ?? err}\n`);
     } catch { /* ignore */ }
+    responder(`ZapBerry: reação falhou — ${String(err?.message ?? err).slice(0, 120)}`);
   }
 });
 
