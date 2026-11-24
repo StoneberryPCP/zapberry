@@ -10,6 +10,8 @@ rodando num Chromium completo e atual (sem os engasgos de PWA do QtWebEngine).
   renomear, mudar cor, recarregar, abrir em janela separada, remover.
 - **Respostas rápidas** — digite `/preço` + espaço no chat e o texto completo entra no lugar.
   Gerencie no botão ⚡ da barra (ou bandeja → Respostas rápidas). Vale pra todas as contas.
+- **Reação no duplo clique** — dois cliques em cima da mensagem reagem com o emoji escolhido no botão
+  da barra lateral (padrão 👍; dá pra desligar). Dois cliques ao lado da mensagem seguem abrindo a resposta.
 - **Janela separada (multi-monitor)** — clique direito → "Abrir em janela separada":
   a conta vira uma janela própria (recepção num monitor, comercial no outro). Fechar traz de volta.
 - **Bandeja (tray)** — fechar a janela esconde pra bandeja; badge com total de não lidas

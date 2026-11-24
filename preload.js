@@ -39,6 +39,9 @@ contextBridge.exposeInMainWorld('whatsapx', {
   onTheme: (cb) => ipcRenderer.on('ui-theme', (_e, t) => cb(t)),
   setTema: (t) => ipcRenderer.send('set-tema', t),
   getTema: () => ipcRenderer.invoke('get-tema'),
+  menuReacao: () => ipcRenderer.send('menu-reacao'),
+  getReacao: () => ipcRenderer.invoke('get-reacao'),
+  onReacao: (cb) => ipcRenderer.on('reacao-atual', (_e, r) => cb(r)),
   onTemaEscolha: (cb) => ipcRenderer.on('tema-escolha', (_e, t) => cb(t)),
   onPedirRename: (cb) => ipcRenderer.on('pedir-rename', (_e, id) => cb(id)),
 });

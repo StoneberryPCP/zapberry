@@ -58,6 +58,8 @@ function loadCfg() {
     };
   }
   if (!Array.isArray(cfg.snippets)) cfg.snippets = [];
+  // Duplo clique na mensagem → reage com este emoji (null = desligado)
+  if (cfg.reacao === undefined) cfg.reacao = '👍';
   // Integração Stoneberry (Supabase do sistema) — pode trocar no whatsapx.json
   if (!cfg.berry) {
     cfg.berry = {
@@ -160,6 +162,7 @@ function criarView(conta) {
     const z = cfg.zooms[conta.id];
     if (z) wc.setZoomFactor(z);
     sendWa(wc, 'snippets', cfg.snippets);
+    sendWa(wc, 'reacao', cfg.reacao);
   });
   wc.on('before-input-event', (e, input) => {
     if (input.type !== 'keyDown') return;
@@ -454,6 +457,60 @@ async function injetarWaJs(wc) {
     if (!ja) await wc.executeJavaScript(WA_JS_SRC, true);
   } catch { /* tenta de novo no próximo load/envio */ }
 }
+
+/* ─── Reação no duplo clique ────────────────────────────────────────
+   wa-preload detecta o duplo clique em cima da bolha da mensagem e manda
+   o data-id dela; aqui reage pelo WA-JS na mesma conta (webContents que mandou). */
+const REACOES = ['👍', '❤️', '😂', '😮', '😢', '🙏', '✅', '👏', '🔥', '🤝', '👀'];
+
+ipcMain.on('reagir-msg', async (e, msgId) => {
+  const emoji = cfg.reacao;
+  if (!emoji || typeof msgId !== 'string' || !/^(true|false)_\S{5,200}$/.test(msgId)) return;
+  const wc = e.sender;
+  await injetarWaJs(wc);
+  const script = `(async () => {
+    const dorme = (ms) => new Promise((r) => setTimeout(r, ms));
+    for (let i = 0; i < 10; i++) {
+      if (typeof WPP !== 'undefined' && WPP.isReady) break;
+      await dorme(300);
+    }
+    if (typeof WPP === 'undefined' || !WPP.isReady) return 'WPP nao carregou';
+    await WPP.chat.sendReactionToMessage(${JSON.stringify(msgId)}, ${JSON.stringify(emoji)});
+    return 'ok';
+  })()`;
+  try {
+    const r = await wc.executeJavaScript(script, true);
+    if (r !== 'ok') throw new Error(r);
+  } catch (err) {
+    try {
+      fs.appendFileSync(path.join(app.getPath('userData'), 'zapberry-debug.log'),
+        `${new Date().toISOString()} reagir-msg ERRO (${msgId}): ${err?.message ?? err}\n`);
+    } catch { /* ignore */ }
+  }
+});
+
+function enviarReacao() {
+  if (win && !win.isDestroyed()) win.webContents.send('reacao-atual', cfg.reacao);
+  for (const view of views.values()) sendWa(view.webContents, 'reacao', cfg.reacao);
+}
+ipcMain.handle('get-reacao', () => cfg.reacao);
+ipcMain.on('menu-reacao', () => {
+  const menu = new Menu();
+  menu.append(new MenuItem({ label: 'Duplo clique na mensagem reage com:', enabled: false }));
+  menu.append(new MenuItem({ type: 'separator' }));
+  for (const r of REACOES) {
+    menu.append(new MenuItem({
+      label: r, type: 'radio', checked: cfg.reacao === r,
+      click: () => { cfg.reacao = r; saveCfg(); enviarReacao(); },
+    }));
+  }
+  menu.append(new MenuItem({ type: 'separator' }));
+  menu.append(new MenuItem({
+    label: 'Desligado', type: 'radio', checked: !cfg.reacao,
+    click: () => { cfg.reacao = null; saveCfg(); enviarReacao(); },
+  }));
+  menu.popup({ window: win });
+});
 
 // Envio preferencial: WA-JS (API interna, por ID). Fallback: automação da UI.
 async function enviarViaWpp(item) {

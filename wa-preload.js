@@ -325,3 +325,46 @@ window.addEventListener('keydown', (e) => {
     if (expandirSnippet()) { e.preventDefault(); e.stopImmediatePropagation(); }
   } catch (err) { log(`keydown ERRO: ${err.message}`); }
 }, true);
+
+/* ─── Reação no duplo clique ────────────────────────────────────────
+   Duplo clique EM CIMA da bolha da mensagem → reage com o emoji escolhido
+   na barra lateral (padrão 👍). Duplo clique ao lado da bolha continua com
+   o comportamento do próprio WhatsApp (responder). A reação em si é feita
+   pelo processo principal via WA-JS, usando o data-id da mensagem. */
+let reacao = '👍';
+ipcRenderer.on('reacao', (_e, r) => { reacao = r || null; });
+
+// Linha da mensagem (data-id "true_..."/"false_...") + se o clique caiu na bolha.
+// Bolha = algum elemento entre o alvo e a linha bem mais estreito que a linha;
+// a margem vazia ao lado só tem wrappers da largura toda.
+function mensagemNaBolha(alvo) {
+  if (!(alvo instanceof Element)) return null;
+  if (alvo.closest('#pane-side, footer, header, a, button, [role="button"], input, textarea, [contenteditable="true"], img, video, audio, canvas')) return null;
+  const linha = alvo.closest('[data-id]');
+  if (!linha) return null;
+  const id = linha.getAttribute('data-id') || '';
+  if (!/^(true|false)_\S{5,200}$/.test(id)) return null;
+  const largura = linha.getBoundingClientRect().width;
+  if (!largura) return null;
+  for (let el = alvo; el && el !== linha; el = el.parentElement) {
+    const w = el.getBoundingClientRect().width;
+    if (w > 0 && w < largura * 0.85) return id;
+  }
+  return null;
+}
+
+// 2º mousedown seguido seleciona palavra — na bolha, segura a seleção
+window.addEventListener('mousedown', (e) => {
+  if (!reacao || e.button !== 0 || e.detail !== 2) return;
+  if (mensagemNaBolha(e.target)) e.preventDefault();
+}, true);
+
+window.addEventListener('dblclick', (e) => {
+  if (!reacao || e.button !== 0) return;
+  const id = mensagemNaBolha(e.target);
+  if (!id) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  try { window.getSelection()?.removeAllRanges(); } catch { /* ignore */ }
+  ipcRenderer.send('reagir-msg', id);
+}, true);

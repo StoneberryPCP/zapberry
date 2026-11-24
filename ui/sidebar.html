@@ -79,6 +79,7 @@
   <div class="sep"></div>
   <button class="btn snip" id="berry" title="ZapBerry — avisos de serrada e estoque do sistema Stoneberry"><img src="../assets/logo_sb.png" alt="Stoneberry" style="width:26px;height:26px;object-fit:contain"></button>
   <button class="btn snip" id="snip" title="Respostas rápidas — /atalho + espaço no chat">⚡</button>
+  <button class="btn snip" id="reacao" title="Reação no duplo clique">👍</button>
   <button class="btn snip" id="tema" title="Tema">🌓</button>
   <button class="btn" id="add" title="Nova conta (Ctrl+N) · Ctrl+1..9 troca · Ctrl+Shift+W mostra/esconde">+</button>
 
@@ -171,6 +172,17 @@
   };
   window.whatsapx.onTemaEscolha((t) => { temaAtual = t; mostrarTema(); });
   window.whatsapx.getTema().then((t) => { temaAtual = t; mostrarTema(); });
+
+  // Reação no duplo clique: botão mostra o emoji escolhido; clique abre a lista
+  const $reacao = document.getElementById('reacao');
+  function mostrarReacao(r) {
+    $reacao.textContent = r || '🚫';
+    $reacao.style.opacity = r ? '1' : '.5';
+    $reacao.title = r ? `Duplo clique na mensagem reage com ${r} (clique pra trocar)` : 'Reação no duplo clique desligada (clique pra escolher)';
+  }
+  $reacao.onclick = () => window.whatsapx.menuReacao();
+  window.whatsapx.onReacao(mostrarReacao);
+  window.whatsapx.getReacao().then(mostrarReacao);
 
   const $rename = document.getElementById('rename');
   const $renameInput = document.getElementById('rename-input');
