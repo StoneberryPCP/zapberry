@@ -147,6 +147,36 @@
   input[type=file] { padding:9px 12px; cursor:pointer; }
   input[type=file]::file-selector-button { margin-right:12px; border:0; border-radius:8px; padding:7px 14px; background:var(--azul); color:#fff; font-weight:700; cursor:pointer; }
 
+  /* Enviar avisos: caixa de seleção própria, barra de seleção e linha do bloco */
+  .ck { appearance:none; -webkit-appearance:none; flex:none; width:18px !important; height:18px; padding:0; margin:0; border:1.5px solid var(--muted);
+    border-radius:6px; background:transparent; cursor:pointer; display:inline-grid; place-items:center; transition:background .12s, border-color .12s; }
+  .ck:hover, .ck:focus { border-color:var(--azul); }
+  .ck:focus-visible { outline:2px solid var(--azul); outline-offset:2px; }
+  .ck:checked, .ck:indeterminate { background:var(--azul); border-color:var(--azul); }
+  .ck:checked::after { content:''; width:9px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform:translateY(-1px) rotate(-45deg); }
+  .ck:indeterminate::after { content:''; width:9px; height:2px; border-radius:1px; background:#fff; }
+  .env-barra { display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+  .env-barra .cont { flex:1; min-width:0; font-size:12.5px; font-weight:700; color:var(--muted); }
+  .cardc { padding:12px 14px 10px; transition:opacity .12s; }
+  .cardc.fora { opacity:.6; }
+  .cardc .cab { gap:10px; margin-bottom:4px; padding-bottom:8px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .cardc .cab .nome { font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cardc .cab .qt { font-size:11.5px; font-weight:700; color:var(--muted); white-space:nowrap; }
+  .cardc .tag { font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:99px; background:rgba(217,119,6,.16); color:#d97706;
+    white-space:nowrap; max-width:45%; overflow:hidden; text-overflow:ellipsis; }
+  .cardc .tag.ok { background:rgba(22,163,74,.16); color:var(--ok); }
+  .bl { gap:10px; padding:7px 8px; margin:0 -8px; border-radius:9px; font-size:12.5px; }
+  .bl:hover { background:var(--hover); }
+  .bl .tx { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bl.off .tx, .bl.off .chip { opacity:.5; }
+  .chip { flex:none; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:99px; border:1px solid var(--line); white-space:nowrap; }
+  .chip.sobra { border-color:transparent; background:rgba(217,119,6,.16); color:#d97706; }
+  .bl .tirar { flex:none; border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:8px; padding:4px 9px;
+    font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .bl .tirar:hover { border-color:#ef4444; color:#ef4444; }
+  .bl .tirar:disabled { opacity:.5; cursor:wait; }
+  .acoes button:disabled { opacity:.5; cursor:not-allowed; filter:none; }
+
   /* Aviso geral: duas colunas (imagem, saudações e ritmo à esquerda; grupos à direita), ações embaixo */
   #painel-aviso[style*="block"] { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); grid-template-rows:auto auto auto 1fr; column-gap:30px; align-items:start; }
   #painel-aviso > .av-bloco:nth-child(1), #painel-aviso > .av-bloco:nth-child(2), #painel-aviso > .av-bloco:nth-child(3) { grid-column:1; }
@@ -655,7 +685,8 @@
         esps: novas.map((x) => ({ esp: x.espessura, qtd: x.quantidade, ref: refDe(b.id, x.espessura) })),
       });
     }
-    fila = [...porCliente.values()];
+    // com grupo primeiro (são os que enviam), depois por nome
+    fila = [...porCliente.values()].sort((a, b) => (!!b.grupo - !!a.grupo) || a.clienteNome.localeCompare(b.clienteNome, 'pt-BR'));
     fila.forEach((c) => { c.msg = msgCliente(c); });
     if (aba !== 'enviar') return; renderEnviar();
   }
@@ -664,41 +695,97 @@
     return msgSerrada(c.blocos.filter((x) => x.sel));
   }
 
+  let enviando = false;
+
+  /** Botão de envio e contador da barra: só conta bloco marcado de cliente COM grupo (é o que de fato envia). */
+  function atualizarAcoesEnviar() {
+    let cli = 0, blo = 0, semGrupo = 0;
+    for (const c of fila) {
+      const n = c.blocos.filter((b) => b.sel).length;
+      if (!n) continue;
+      if (c.grupo) { cli++; blo += n; } else semGrupo += n;
+    }
+    const pl = (n, s) => `${n} ${s}${n === 1 ? '' : 's'}`;
+    $('revisei').textContent = blo ? `✅ Revisei — enviar ${pl(blo, 'bloco')} para ${pl(cli, 'cliente')}` : 'Nenhum bloco marcado para enviar';
+    $('revisei').disabled = enviando || !blo;
+    const cont = $('env-cont');
+    if (cont) cont.textContent = `${pl(blo, 'bloco')} de ${pl(cli, 'cliente')} para enviar` + (semGrupo ? ` · ${pl(semGrupo, 'marcado')} sem grupo (não envia)` : '');
+  }
+
+  /** Tira o bloco da fila SEM enviar: grava como avisado (grupo_jid 'sem-envio' = ninguém recebeu mensagem). */
+  async function tirarDoAviso(c, b, botao) {
+    if (enviando) { $('status').textContent = 'Espera o envio terminar.'; return; }
+    const esps = b.esps.map((e) => `${e.qtd}×${esp2(e.esp)}cm`).join(' + ');
+    if (!(await confirmar(`Bloco ${b.numero} · ${b.material}\n${c.clienteNome} — ${esps}\n\nO bloco sai desta lista e fica como avisado no sistema. Nenhuma mensagem é enviada ao cliente.`,
+      { titulo: 'Tirar do aviso sem enviar', sim: 'Tirar do aviso' }))) return;
+    botao.disabled = true;
+    try {
+      await sbw('zapberry_avisos?on_conflict=ref', 'POST',
+        b.esps.map((e) => ({ tipo: 'serrada', ref: e.ref, cliente_id: c.clienteId || null, grupo_jid: 'sem-envio', quantidade: e.qtd ?? null })),
+        'resolution=ignore-duplicates,return=minimal');
+    } catch (e) {
+      $('status').textContent = 'Não consegui tirar do aviso: ' + e.message;
+      botao.disabled = false;
+      return;
+    }
+    c.blocos.splice(c.blocos.indexOf(b), 1);
+    if (!c.blocos.length) fila.splice(fila.indexOf(c), 1); else c.msg = msgCliente(c);
+    $('status').textContent = `Bloco ${b.numero} tirado do aviso — nada foi enviado ao cliente.`;
+    if (aba === 'enviar') renderEnviar();
+  }
+
   function renderEnviar() {
     const $l = $('lista');
     $l.innerHTML = '';
     if (fila.length === 0) {
       $l.innerHTML = '<p class="vazio">Nenhuma serrada nova pra avisar. 🎉</p>';
+      atualizarAcoesEnviar();
       return;
     }
-    fila.forEach((c, ci) => {
-      const card = document.createElement('div');
-      card.className = 'cardc';
-      const cab = document.createElement('div');
-      cab.className = 'cab';
-      cab.innerHTML = `<span class="nome">${c.clienteNome}</span>` + (c.grupo
-        ? `<span class="tag ok">→ ${c.grupo.nome_grupo}</span>`
-        : '<span class="tag">sem grupo — aba 🔗 Grupos</span>');
-      card.appendChild(cab);
-      c.blocos.forEach((b, bi) => {
-        const l = document.createElement('label');
-        l.className = 'bl';
-        const chk = document.createElement('input');
-        chk.type = 'checkbox'; chk.checked = b.sel;
-        chk.onchange = () => { fila[ci].blocos[bi].sel = chk.checked; fila[ci].msg = msgCliente(fila[ci]); card.querySelector('textarea').value = fila[ci].msg; };
-        const sp = document.createElement('span');
-        sp.innerHTML = `<strong>Bloco ${b.numero}</strong> · ${b.material} <span class="d">(${b.interno}) — ${b.esps.map((e) => `${e.qtd}×${esp2(e.esp)}cm`).join(' + ')}${b.sobra ? ' · ' + b.sobra : ''}</span>`;
-        l.append(chk, sp);
+    const marcarTudo = (v) => { fila.forEach((c) => { c.blocos.forEach((b) => { b.sel = v; }); c.msg = msgCliente(c); }); renderEnviar(); };
+    const todos = el('button', { className: 'mini', type: 'button', textContent: 'Marcar todos' });
+    const nenhum = el('button', { className: 'mini', type: 'button', textContent: 'Desmarcar todos' });
+    todos.onclick = () => marcarTudo(true);
+    nenhum.onclick = () => marcarTudo(false);
+    $l.appendChild(el('div', { className: 'env-barra' }, el('span', { className: 'cont', id: 'env-cont' }), todos, nenhum));
+
+    fila.forEach((c) => {
+      const card = el('div', { className: 'cardc' });
+      const ckCli = el('input', { type: 'checkbox', className: 'ck', title: 'Marcar ou desmarcar todos os blocos deste cliente' });
+      const qt = el('span', { className: 'qt' });
+      const tag = el('span', { className: 'tag' + (c.grupo ? ' ok' : ''), textContent: c.grupo ? `→ ${c.grupo.nome_grupo}` : 'sem grupo — vincule em Grupos' });
+      card.appendChild(el('label', { className: 'cab' }, ckCli, el('span', { className: 'nome', textContent: c.clienteNome }), qt, tag));
+      const ta = el('textarea', { value: c.msg });
+      ta.oninput = () => { c.msg = ta.value; };
+      const linhas = [];
+      const pintar = () => {
+        const n = c.blocos.filter((b) => b.sel).length;
+        ckCli.checked = n === c.blocos.length;
+        ckCli.indeterminate = n > 0 && n < c.blocos.length;
+        qt.textContent = `${n} de ${c.blocos.length}`;
+        card.classList.toggle('fora', n === 0);
+        linhas.forEach(({ l, chk, b }) => { chk.checked = b.sel; l.classList.toggle('off', !b.sel); });
+        atualizarAcoesEnviar();
+      };
+      const mudou = () => { c.msg = msgCliente(c); ta.value = c.msg; pintar(); };
+      c.blocos.forEach((b) => {
+        const chk = el('input', { type: 'checkbox', className: 'ck' });
+        const tx = el('span', { className: 'tx' }, el('strong', { textContent: `Bloco ${b.numero}` }), ` · ${b.material}`);
+        if (b.interno) tx.append(' ', el('span', { className: 'd', textContent: `(${b.interno})` }));
+        const l = el('label', { className: 'bl' }, chk, tx);
+        b.esps.forEach((e) => l.append(el('span', { className: 'chip', textContent: `${e.qtd}×${esp2(e.esp)}cm` })));
+        if (b.sobra) l.append(el('span', { className: 'chip sobra', textContent: b.sobra }));
+        const tirar = el('button', { className: 'tirar', type: 'button', textContent: 'Tirar do aviso', title: 'Tira o bloco desta lista sem enviar nada ao cliente' });
+        tirar.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); tirarDoAviso(c, b, tirar); };
+        l.append(tirar);
+        chk.onchange = () => { b.sel = chk.checked; mudou(); };
+        linhas.push({ l, chk, b });
         card.appendChild(l);
       });
-      const det = document.createElement('details');
-      det.innerHTML = '<summary>ver / editar mensagem</summary>';
-      const ta = document.createElement('textarea');
-      ta.value = c.msg;
-      ta.oninput = () => { fila[ci].msg = ta.value; };
-      det.appendChild(ta);
-      card.appendChild(det);
+      ckCli.onchange = () => { const v = ckCli.checked; c.blocos.forEach((b) => { b.sel = v; }); mudou(); };
+      card.appendChild(el('details', {}, el('summary', { textContent: 'ver / editar mensagem' }), ta));
       $l.appendChild(card);
+      pintar();
     });
   }
 
@@ -706,6 +793,7 @@
     const prontos = fila.filter((c) => c.grupo && c.blocos.some((b) => b.sel));
     if (!prontos.length) { $('status').textContent = 'Nada aprovado com grupo vinculado.'; return; }
     const semGrupo = fila.filter((c) => !c.grupo && c.blocos.some((b) => b.sel)).length;
+    enviando = true;
     $('revisei').disabled = true;
     $('status').textContent = `Enviando 0/${prontos.length}...`;
     const itens = prontos.map((c) => ({
@@ -725,7 +813,8 @@
     } catch (e) {
       $('status').textContent = 'Erro no envio: ' + e.message;
     }
-    $('revisei').disabled = false;
+    enviando = false;
+    atualizarAcoesEnviar();
     buscarEnviar(); // enviados somem da fila
   };
   window.whatsapx.onEnvioProgresso((res) => {
